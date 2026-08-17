@@ -1,4 +1,4 @@
-import { parseBeneosPack } from "./legacy-beneos-parser.mjs";
+import { parseBeneosPack } from "./beneos-pack-installer.mjs";
 
 /**
  * Gets or recursively creates folders within a target compendium pack.
