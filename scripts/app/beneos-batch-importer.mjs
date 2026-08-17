@@ -398,6 +398,9 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
          * Applies search queries, keyword filters, and HD/4K resolution matching
          */
         applyFilters() {
+            // Build fast in-memory document index to make card rendering instantaneous
+            this.buildWorldDocumentIndex();
+
             // 1. First, compile filteredMaps from the database holder (individual bmaps)
             const allMaps = Object.entries(game.beneos?.databaseHolder?.getAll?.("bmap") || {});
             const compiledMapsList = [];
@@ -2416,6 +2419,35 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
              `;
         }
 
+        buildWorldDocumentIndex() {
+            this._worldSceneIndex = [];
+            this._worldJournalIndex = [];
+            this._worldFolderIndex = new Set();
+
+            for (const s of (game.scenes || [])) {
+                const cleanName = s.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+                const coreName = this.getCoreName(s.name);
+                const rawBg = s.img || s._source?.background?.src || "";
+                const bgPath = typeof rawBg === "string" ? rawBg.toLowerCase() : String(rawBg || "").toLowerCase();
+                const isBg4K = bgPath.includes("4k") || bgPath.includes("uhd") || bgPath.includes("ultra hd") || bgPath.includes("ultra_hd");
+                const sourceId = (s.getFlag('core', 'sourceId') || s._stats?.compendiumSource || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+                this._worldSceneIndex.push({ cleanName, coreName, isBg4K, sourceId });
+            }
+
+            for (const j of (game.journal || [])) {
+                const cleanName = j.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+                const coreName = this.getCoreName(j.name);
+                const sourceId = (j.getFlag('core', 'sourceId') || j._stats?.compendiumSource || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+                this._worldJournalIndex.push({ cleanName, coreName, sourceId });
+            }
+
+            for (const f of (game.folders || [])) {
+                if (f.type === "Scene" || f.type === "JournalEntry") {
+                    this._worldFolderIndex.add(f.name.toLowerCase().replace(/\s*(4k|hd|uhd|ultra hd|high def).*$/i, "").replace(/[^a-z0-9]/g, ""));
+                }
+            }
+        }
+
         checkInstallStatus(pkgName, pkgId = null) {
             if (!pkgName) return "none";
             
@@ -2427,6 +2459,10 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
             if (this.installedPackagesSession?.has(this.cleanSessionKey(pkgName))) {
                 this.installStatusCache?.set(cacheKey, "installed");
                 return "installed";
+            }
+
+            if (!this._worldSceneIndex) {
+                this.buildWorldDocumentIndex();
             }
             
             const targets = new Set();
@@ -2455,164 +2491,72 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
             let hasInstalled = false;
             let hasPartial = false;
             const is4KTarget = pkgName.toLowerCase().includes("4k") || pkgName.toLowerCase().includes("uhd") || pkgName.toLowerCase().includes("ultra hd");
+            const cleanPkgId = pkgId ? pkgId.toString().toLowerCase() : "";
 
-            // 1. Direct Scene Check
-            const matchingScenes = game.scenes.filter(s => {
-                const cleanScene = s.name.toLowerCase().replace(/[^a-z0-9]/g, "");
-                const coreScene = this.getCoreName(s.name);
-                
+            // 1. Direct Scene Check via pre-indexed fast array
+            for (const s of this._worldSceneIndex) {
+                let match = false;
                 for (const t of targets) {
-                    if (cleanScene.includes(t) || t.includes(cleanScene)) return true;
+                    if (s.cleanName.includes(t) || t.includes(s.cleanName)) { match = true; break; }
                 }
-                for (const ct of coreTargets) {
-                    if (coreScene.includes(ct) || ct.includes(coreScene)) return true;
-                }
-                
-                const sourceId = s.getFlag('core', 'sourceId') || s._stats?.compendiumSource || s.getFlag('scene-packer', 'sourceId') || "";
-                if (sourceId) {
-                    const cleanSource = sourceId.toLowerCase().replace(/[^a-z0-9]/g, "");
-                    for (const t of targets) {
-                        if (cleanSource.includes(t)) return true;
-                    }
+                if (!match) {
                     for (const ct of coreTargets) {
-                        if (cleanSource.includes(ct)) return true;
-                    }
-                    if (pkgId && cleanSource.includes(pkgId.toString())) {
-                        return true;
+                        if (s.coreName.includes(ct) || ct.includes(s.coreName)) { match = true; break; }
                     }
                 }
-                return false;
-            });
+                if (!match && cleanPkgId && s.sourceId && s.sourceId.includes(cleanPkgId)) {
+                    match = true;
+                }
 
-            if (matchingScenes.length > 0) {
-                for (const scene of matchingScenes) {
-                    const rawBg = scene.img || scene._source?.background?.src || "";
-                    const bgPath = typeof rawBg === "string" ? rawBg.toLowerCase() : String(rawBg || "").toLowerCase();
-                    const isBg4K = bgPath.includes("4k") || bgPath.includes("uhd") || bgPath.includes("ultra hd") || bgPath.includes("ultra_hd");
-                    if (is4KTarget === isBg4K) {
+                if (match) {
+                    if (is4KTarget === s.isBg4K) {
                         hasInstalled = true;
+                        break;
                     } else {
                         hasPartial = true;
                     }
                 }
             }
 
-            // 2. Direct Journal Check
-            const matchingJournals = game.journal.filter(j => {
-                const cleanJournal = j.name.toLowerCase().replace(/[^a-z0-9]/g, "");
-                const coreJournal = this.getCoreName(j.name);
-                
-                for (const t of targets) {
-                    if (cleanJournal.includes(t) || t.includes(cleanJournal)) return true;
-                }
-                for (const ct of coreTargets) {
-                    if (coreJournal.includes(ct) || ct.includes(coreJournal)) return true;
-                }
-                
-                const sourceId = j.getFlag('core', 'sourceId') || j._stats?.compendiumSource || j.getFlag('scene-packer', 'sourceId') || "";
-                if (sourceId) {
-                    const cleanSource = sourceId.toLowerCase().replace(/[^a-z0-9]/g, "");
+            // 2. Direct Journal Check via pre-indexed fast array (if scene not already confirmed)
+            if (!hasInstalled) {
+                for (const j of this._worldJournalIndex) {
+                    let match = false;
                     for (const t of targets) {
-                        if (cleanSource.includes(t)) return true;
+                        if (j.cleanName.includes(t) || t.includes(j.cleanName)) { match = true; break; }
                     }
-                    for (const ct of coreTargets) {
-                        if (cleanSource.includes(ct)) return true;
-                    }
-                    if (pkgId && cleanSource.includes(pkgId.toString())) {
-                        return true;
-                    }
-                }
-                return false;
-            });
-
-            if (matchingJournals.length > 0) {
-                for (const journal of matchingJournals) {
-                    let foundPath = "";
-                    if (journal.pages) {
-                        const page = journal.pages.find(p => {
-                            const src = p.src || p.image?.src || p.system?.src || p.text?.content || "";
-                            return typeof src === "string" && src.toLowerCase().includes("moulinette");
-                        });
-                        if (page) {
-                            const rawSrc = page.src || page.image?.src || page.system?.src || page.text?.content || "";
-                            foundPath = typeof rawSrc === "string" ? rawSrc.toLowerCase() : String(rawSrc || "").toLowerCase();
+                    if (!match) {
+                        for (const ct of coreTargets) {
+                            if (j.coreName.includes(ct) || ct.includes(j.coreName)) { match = true; break; }
                         }
                     }
-                    if (foundPath) {
-                        const isPath4K = foundPath.includes("4k") || foundPath.includes("uhd") || foundPath.includes("ultra hd") || foundPath.includes("ultra_hd");
-                        if (is4KTarget === isPath4K) {
-                            hasInstalled = true;
-                        } else {
-                            hasPartial = true;
-                        }
-                    } else {
+                    if (!match && cleanPkgId && j.sourceId && j.sourceId.includes(cleanPkgId)) {
+                        match = true;
+                    }
+                    if (match) {
                         hasInstalled = true;
+                        break;
                     }
                 }
             }
 
             // 3. Folder Check fallback
-            const folders = game.folders.filter(f => {
-                if (f.type !== "Scene" && f.type !== "JournalEntry") return false;
-                const cleanFolder = f.name.toLowerCase().replace(/\s*(4k|hd|uhd|ultra hd|high def).*$/i, "").replace(/[^a-z0-9]/g, "");
-                const coreFolder = this.getCoreName(f.name);
-                
-                for (const t of targets) {
-                    if (cleanFolder === t || cleanFolder.includes(t) || t.includes(cleanFolder)) return true;
-                }
-                for (const ct of coreTargets) {
-                    if (coreFolder === ct || coreFolder.includes(ct) || ct.includes(coreFolder)) return true;
-                }
-                return false;
-            });
-
-            if (folders.length > 0) {
-                for (const folder of folders) {
-                    if (folder.contents.length > 0) {
-                        let resMatch = true;
-                        if (folder.type === "Scene") {
-                            const sceneWithBg = folder.contents.find(s => s.img || s._source?.background?.src);
-                            if (sceneWithBg) {
-                                const rawBg = sceneWithBg.img || sceneWithBg._source?.background?.src || "";
-                                const bgPath = typeof rawBg === "string" ? rawBg.toLowerCase() : String(rawBg || "").toLowerCase();
-                                const isBg4K = bgPath.includes("4k") || bgPath.includes("uhd") || bgPath.includes("ultra hd") || bgPath.includes("ultra_hd");
-                                if (is4KTarget !== isBg4K) resMatch = false;
-                            }
-                        } else if (folder.type === "JournalEntry") {
-                            let foundPath = "";
-                            for (const journal of folder.contents) {
-                                if (journal.pages) {
-                                    const page = journal.pages.find(p => {
-                                        const src = p.src || p.image?.src || p.system?.src || p.text?.content || "";
-                                        return typeof src === "string" && src.toLowerCase().includes("moulinette");
-                                    });
-                                    if (page) {
-                                        const rawSrc = page.src || page.image?.src || page.system?.src || page.text?.content || "";
-                                        foundPath = typeof rawSrc === "string" ? rawSrc.toLowerCase() : String(rawSrc || "").toLowerCase();
-                                        break;
-                                    }
-                                }
-                            }
-                            if (foundPath) {
-                                const isPath4K = foundPath.includes("4k") || foundPath.includes("uhd") || foundPath.includes("ultra hd") || foundPath.includes("ultra_hd");
-                                if (is4KTarget !== isPath4K) resMatch = false;
-                            }
-                        }
-                        if (resMatch) {
+            if (!hasInstalled) {
+                for (const fName of this._worldFolderIndex) {
+                    for (const t of targets) {
+                        if (fName === t || fName.includes(t) || t.includes(fName)) {
                             hasInstalled = true;
-                        } else {
-                            hasPartial = true;
+                            break;
                         }
-                    } else {
-                        hasPartial = true;
                     }
+                    if (hasInstalled) break;
                 }
             }
 
             let finalStatus = "none";
             if (hasInstalled) {
                 finalStatus = "installed";
-            } else if (folders.length > 0 || matchingScenes.length > 0 || matchingJournals.length > 0 || hasPartial) {
+            } else if (hasPartial) {
                 finalStatus = "partial";
             }
 
