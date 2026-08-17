@@ -98,28 +98,6 @@ Hooks.on("getSceneControlButtons", (controls) => {
   };
   addTool(tool);
 
-  // Define our Batch Importer tool button
-  const batchTool = {
-    name: "beneos-batch-importer",
-    title: "Beneos Batch Importer",
-    icon: "jenne-batch-importer-icon",
-    button: true,
-    visible: true,
-    onClick: () => {
-      if (!game.modules.get('beneos-module')?.active) {
-        return ui.notifications.error("The 'Beneos Module' must be active to run the Batch Importer.");
-      }
-      if (!game.modules.get('scene-packer')?.active) {
-        return ui.notifications.error("The 'ScenePacker' module must be active to run the Batch Importer.");
-      }
-      if (!game.modules.get('moulinette')?.active) {
-        return ui.notifications.error("The 'Moulinette Core' module must be active to run the Batch Importer.");
-      }
-      new BeneosBatchImporterApp().render({ force: true });
-    }
-  };
-  addTool(batchTool);
-
   // Define our DDB Importer Patch tool button
   const ddbTool = {
     name: "ddb-patcher",

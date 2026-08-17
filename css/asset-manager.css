@@ -1,50 +1,48 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap');
 
 /* ==========================================================================
-   Custom Jenne Suite Embedded Vector Icons
+   Custom Jenne Suite Embedded Base64 Vector Icons
    ========================================================================== */
 #controls .scene-control i.jenne-gothic-j-icon,
 #controls .control-tool i.jenne-gothic-j-icon,
 #controls .control-tool i.jenne-custom-icon,
-#controls .control-tool i.jenne-batch-importer-icon,
+#controls li[data-control="jenne-suite"] > i,
+#controls li[data-tool="jenne-asset-manager"] > i,
 i.jenne-gothic-j-icon,
-i.jenne-custom-icon,
-i.jenne-batch-importer-icon {
+i.jenne-custom-icon {
   display: inline-block !important;
-  width: 22px !important;
-  height: 22px !important;
-  min-width: 22px !important;
-  min-height: 22px !important;
-  vertical-align: middle !important;
+  width: 24px !important;
+  height: 24px !important;
+  min-width: 24px !important;
+  min-height: 24px !important;
+  margin: 0 auto !important;
   background-position: center !important;
   background-repeat: no-repeat !important;
   background-size: contain !important;
+  vertical-align: middle !important;
 }
 
-#controls .scene-control i.jenne-gothic-j-icon:before,
-#controls .control-tool i.jenne-gothic-j-icon:before,
-#controls .control-tool i.jenne-custom-icon:before,
-#controls .control-tool i.jenne-batch-importer-icon:before,
-i.jenne-gothic-j-icon:before,
-i.jenne-custom-icon:before,
-i.jenne-batch-importer-icon:before {
+#controls .scene-control i.jenne-gothic-j-icon::before,
+#controls .control-tool i.jenne-gothic-j-icon::before,
+#controls .control-tool i.jenne-custom-icon::before,
+#controls li[data-control="jenne-suite"] > i::before,
+#controls li[data-tool="jenne-asset-manager"] > i::before,
+i.jenne-gothic-j-icon::before,
+i.jenne-custom-icon::before {
   content: "" !important;
   display: none !important;
 }
 
-#controls i.jenne-gothic-j-icon,
+#controls .scene-control i.jenne-gothic-j-icon,
+#controls li[data-control="jenne-suite"] > i,
 i.jenne-gothic-j-icon {
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><g transform="translate(256, 256) scale(2.0) translate(-256, -332)"><path d="M 260 250 C 237 250, 220 262, 220 277 C 220 288, 228 297, 239 301 C 247 299, 249 288, 245 283 C 239 278, 242 269, 257 269 L 291 269 L 291 365 C 291 400, 270 432, 222 432 C 200 432, 183 422, 183 411 C 183 401, 193 393, 202 397 C 209 403, 209 414, 223 414 C 242 414, 256 395, 256 368 L 256 269 L 315 269 L 329 250 L 293 250 L 280 233 L 267 250 Z" fill="%23f0d486"/></g></svg>') !important;
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyNTYsIDI1Nikgc2NhbGUoMi4wKSB0cmFuc2xhdGUoLTI1NiwgLTMzMikiPjxwYXRoIGQ9Ik0gMjYwIDI1MCBDIDIzNyAyNTAsIDIyMCAyNjIsIDIyMCAyNzcgQyAyMjAgMjg4LCAyMjggMjk3LCAyMzkgMzAxIEMgMjQ3IDI5OSwgMjQ5IDI4OCwgMjQ1IDI4MyBDIDIzOSAyNzgsIDI0MiAyNjksIDI1NyAyNjkgTCAyOTEgMjY5IEwgMjkxIDM2NSBDIDI5MSA0MDAsIDI3MCA0MzIsIDIyMiA0MzIgQyAyMDAgNDMyLCAxODMgNDIyLCAxODMgNDExIEMgMTgzIDQwMSwgMTkzIDM5MywgMjAyIDM5NyBDIDIwOSA0MDMsIDIwOSA0MTQsIDIyMyA0MTQgQyAyNDIgNDE0LCAyNTYgMzk1LCAyNTYgMzY4IEwgMjU2IDI2OSBMIDMxNSAyNjkgTCAzMjkgMjUwIEwgMjkzIDI1MCBMIDI4MCAyMzMgTCAyNjcgMjUwIFoiIGZpbGw9IiNmMGQ0ODYiLz48L2c+PC9zdmc+') !important;
 }
 
-#controls i.jenne-custom-icon,
+#controls .control-tool i.jenne-custom-icon,
+#controls li[data-tool="jenne-asset-manager"] > i,
 i.jenne-custom-icon {
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M 180 180 C 140 140, 100 90, 140 40 C 180 30, 220 90, 256 110 C 292 90, 332 30, 372 40 C 412 90, 372 140, 332 180 C 412 220, 452 320, 452 400 C 452 470, 372 480, 256 480 C 140 480, 60 470, 60 400 C 60 320, 100 220, 180 180 Z" fill="%23f0d486" opacity="0.45"/><path d="M 160 175 C 200 195, 312 195, 352 175 C 352 195, 340 210, 330 215 C 290 200, 222 200, 182 215 C 172 210, 160 195, 160 175 Z" fill="%23f0d486"/><path d="M 256 185 C 270 185, 275 200, 256 215 C 237 200, 242 185, 256 185 Z" fill="%23f0d486"/><path d="M 245 205 C 235 230, 225 260, 235 285 C 245 285, 250 270, 250 245 C 250 225, 252 215, 250 205 Z" fill="%23f0d486"/><path d="M 267 205 C 277 230, 287 260, 277 285 C 267 285, 262 270, 262 245 C 262 225, 260 215, 262 205 Z" fill="%23f0d486"/><path d="M 260 250 C 237 250, 220 262, 220 277 C 220 288, 228 297, 239 301 C 247 299, 249 288, 245 283 C 239 278, 242 269, 257 269 L 291 269 L 291 365 C 291 400, 270 432, 222 432 C 200 432, 183 422, 183 411 C 183 401, 193 393, 202 397 C 209 403, 209 414, 223 414 C 242 414, 256 395, 256 368 L 256 269 L 315 269 L 329 250 L 293 250 L 280 233 L 267 250 Z" fill="%23f0d486"/></svg>') !important;
-}
-
-#controls i.jenne-batch-importer-icon,
-i.jenne-batch-importer-icon {
-  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M 70 150 L 190 100 L 190 410 L 70 460 Z" fill="%23f0d486" opacity="0.45"/><path d="M 190 100 L 320 150 L 320 460 L 190 410 Z" fill="%23f0d486" opacity="0.25"/><path d="M 320 150 L 442 100 L 442 410 L 320 460 Z" fill="%23f0d486" opacity="0.45"/><g transform="translate(256, 260) scale(1.6) translate(-256, -332)"><path d="M 260 250 C 237 250, 220 262, 220 277 C 220 288, 228 297, 239 301 C 247 299, 249 288, 245 283 C 239 278, 242 269, 257 269 L 291 269 L 291 365 C 291 400, 270 432, 222 432 C 200 432, 183 422, 183 411 C 183 401, 193 393, 202 397 C 209 403, 209 414, 223 414 C 242 414, 256 395, 256 368 L 256 269 L 315 269 L 329 250 L 293 250 L 280 233 L 267 250 Z" fill="%23f0d486"/></g></svg>') !important;
+  background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBkPSJNIDE4MCAxODAgQyAxNDAgMTQwLCAxMDAgOTAsIDE0MCA0MCBDIDE4MCAzMCwgMjIwIDkwLCAyNTYgMTEwIEMgMjkyIDkwLCAzMzIgMzAsIDM3MiA0MCBDIDQxMiA5MCwgMzcyIDE0MCwgMzMyIDE4MCBDIDQxMiAyMjAsIDQ1MiAzMjAsIDQ1MiA0MDAgQyA0NTIgNDcwLCAzNzIgNDgwLCAyNTYgNDgwIEMgMTQwIDQ4MCwgNjAgNDcwLCA2MCA0MDAgQyA2MCAzMjAsIDEwMCAyMjAsIDE4MCAxODAgWiIgZmlsbD0iI2YwZDQ4NiIgb3BhY2l0eT0iMC40NSIvPjxwYXRoIGQ9Ik0gMTYwIDE3NSBDIDIwMCAxOTUsIDMxMiAxOTUsIDM1MiAxNzUgQyAzNTIgMTk1LCAzNDAgMjEwLCAzMzAgMjE1IEMgMjkwIDIwMCwgMjIyIDIwMCwgMTgyIDIxNSBDIDE3MiAyMTAsIDE2MCAxOTUsIDE2MCAxNzUgWiIgZmlsbD0iI2YwZDQ4NiIvPjxwYXRoIGQ9Ik0gMjU2IDE4NSBDIDI3MCAxODUsIDI3NSAyMDAsIDI1NiAyMTUgQyAyMzcgMjAwLCAyNDIgMTg1LCAyNTYgMTg1IFoiIGZpbGw9IiNmMGQ0ODYiLz48cGF0aCBkPSJNIDI0NSAyMDUgQyAyMzUgMjMwLCAyMjUgMjYwLCAyMzUgMjg1IEMgMjQ1IDI4NSwgMjUwIDI3MCwgMjUwIDI0NSBDIDI1MCAyMjUsIDI1MiAyMTUsIDI1MCAyMDUgWiIgZmlsbD0iI2YwZDQ4NiIvPjxwYXRoIGQ9Ik0gMjY3IDIwNSBDIDI3NyAyMzAsIDI4NyAyNjAsIDI3NyAyODUgQyAyNjcgMjg1LCAyNjIgMjcwLCAyNjIgMjQ1IEMgMjYyIDIyNSwgMjYwIDIxNSwgMjYyIDIwNSBaIiBmaWxsPSIjZjBkNDg2Ii8+PHBhdGggZD0iTSAyNjAgMjUwIEMgMjM3IDI1MCwgMjIwIDI2MiwgMjIwIDI3NyBDIDIyMCAyODgsIDIyOCAyOTcsIDIzOSAzMDEgQyAyNDcgMjk5LCAyNDkgMjg4LCAyNDUgMjgzIEMgMjM5IDI3OCwgMjQyIDI2OSwgMjU3IDI2OSBMIDI5MSAyNjkgTCAyOTEgMzY1IEMgMjkxIDQwMCwgMjcwIDQzMiwgMjIyIDQzMiBDIDIwMCA0MzIsIDE4MyA0MjIsIDE4MyA0MTEgQyAxODMgNDAxLCAxOTMgMzkzLCAyMDIgMzk3IEMgMjA5IDQwMywgMjA5IDQxNCwgMjIzIDQxNCBDIDI0MiA0MTQsIDI1NiAzOTUsIDI1NiAzNjggTCAyNTYgMjY5IEwgMzE1IDI2OSBMIDMyOSAyNTAgTCAyOTMgMjUwIEwgMjgwIDIzMyBMIDI2NyAyNTAgWiIgZmlsbD0iI2YwZDQ4NiIvPjwvc3ZnPg==') !important;
 }
 
 /* Jenne Asset Manager - Sleek Modern Dark Mode with Beneos Gold/Mahogany Palette */
