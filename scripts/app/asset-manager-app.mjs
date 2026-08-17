@@ -49,7 +49,8 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       openPreview: JenneAssetManagerApp._onOpenPreview,
       closePreview: JenneAssetManagerApp._onClosePreview,
       playAudio: JenneAssetManagerApp._onPlayAudio,
-      stopAudio: JenneAssetManagerApp._onStopAudio
+      stopAudio: JenneAssetManagerApp._onStopAudio,
+      openBeneosImporter: JenneAssetManagerApp._onOpenBeneosImporter
     }
   };
 
@@ -534,5 +535,13 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       this._activeAudio.pause();
       this._activeAudio.currentTime = 0;
     }
+  }
+
+  static async _onOpenBeneosImporter(event, target) {
+    if (!game.modules.get("beneos-module")?.active) {
+      return ui.notifications.warn("The 'beneos-module' must be active to open the Beneos Batch Importer.");
+    }
+    const { BeneosBatchImporterApp } = await import("./beneos-batch-importer.mjs");
+    new BeneosBatchImporterApp().render({ force: true });
   }
 }

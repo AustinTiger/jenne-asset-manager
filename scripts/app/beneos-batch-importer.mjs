@@ -236,6 +236,57 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
             // Scan actual files on disk for downloaded status
             await this.scanLocalDownloadedPacks();
 
+            let scenePacker = window.BeneosScenePacker;
+            if (!scenePacker && typeof window.ensureBeneosScenePacker === "function") {
+                try {
+                    scenePacker = await window.ensureBeneosScenePacker();
+                } catch (e) {
+                    console.warn("Beneos Batch Importer | ensureBeneosScenePacker failed:", e);
+                }
+            }
+
+            let loadedFromBeneos = false;
+            if (scenePacker) {
+                try {
+                    this.logStatus("Fetching available collections directly from Beneos Cloud...");
+                    const rawPacks = await scenePacker.listPackages();
+                    if (Array.isArray(rawPacks) && rawPacks.length > 0) {
+                        const isLoggedIn = (scenePacker.sessionId && scenePacker.sessionId !== "anonymous") || (game.beneos?.cloud?.isLoggedIn?.() ?? false);
+                        this.isLinked = !!isLoggedIn;
+
+                        this.packages = rawPacks.map(pkg => {
+                            const id = pkg.id || pkg.pack_ref;
+                            return {
+                                id: id,
+                                name: pkg.name,
+                                cover_image: pkg.cover_image || pkg.img || pkg.cover || pkg.icon || "",
+                                author: pkg.creator || pkg.author || "Beneos Battlemaps",
+                                version: pkg.version || "1.0.0",
+                                system: pkg.system || game.system.id,
+                                description: pkg.description || "",
+                                isOwned: pkg.can_install !== false
+                            };
+                        });
+
+                        this.packages.sort((a, b) => a.name.localeCompare(b.name));
+                        const ownedCount = this.packages.filter(p => p.isOwned).length;
+                        this.logSuccess(`Successfully loaded ${this.packages.length} collections (${ownedCount} accessible) from Beneos Cloud.`);
+                        this.compileFilterMetadata();
+                        this.applyFilters();
+                        loadedFromBeneos = true;
+                    }
+                } catch (err) {
+                    console.warn("Beneos Batch Importer | Direct Beneos Cloud listPackages failed, checking fallback:", err);
+                }
+            }
+
+            if (loadedFromBeneos) {
+                this.isLoading = false;
+                this.render({ force: true });
+                return this.packages;
+            }
+
+            // Fallback: Moulinette Cloud if active
             const client = game.modules.get("moulinette")?.cloudclient;
             const mtSession = game.settings.get("moulinette", "session_ID") || "";
             const moulinette = game.modules.get("moulinette");
@@ -256,18 +307,13 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
                 this.filteredPackages = [];
                 this.isLoading = false;
                 this.render({ force: true });
-                if (!client || !mtSession || mtSession === "anonymous") {
-                    this.logError("Moulinette Cloud session not found. Please log into Moulinette Cloud.");
-                    ui.notifications.error("Moulinette Cloud session not found. Please log in to Moulinette Cloud to connect.", { permanent: true });
-                } else if (!this.isLinked) {
-                    this.logError("Moulinette account is not linked to Patreon or Discord! Click 'Link via Patreon/Discord' below to sign in.");
-                    ui.notifications.error("Moulinette account is not linked to Patreon or Discord. Please link your account to gain access to battlemaps.", { permanent: true });
-                }
+                this.logError("Beneos Cloud session not found. Please log in to Beneos Cloud via module settings.");
+                ui.notifications.warn("Please connect your Beneos Cloud account in World Settings -> Beneos Module.");
                 return [];
             }
 
             try {
-                this.logStatus("Fetching available collections from Moulinette Cloud...");
+                this.logStatus("Fetching available collections from Moulinette Cloud (Legacy Fallback)...");
                 
                 // 1. Fetch all packages to display in catalog checklist (type: 2 = map assets)
                 const responseAll = await client.apiPOST("/packs", { 
@@ -283,7 +329,7 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
                 // 2. Fetch accessible (owned) packages to map active Patreon subscription tier ownership
                 const responseOwned = await client.apiPOST("/packs", { 
                     creator: "Beneos Battlemaps",
-                    type: 2,
+                    type: 2, 
                     scope: {
                         session: mtSession,
                         mode: "cloud-accessible"
@@ -311,9 +357,9 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
                 this.compileFilterMetadata();
                 this.applyFilters();
             } catch (error) {
-                console.error("Beneos Batch Importer | Moulinette Fetch Error:", error);
-                this.logError(`Failed to fetch packages from Moulinette: ${error.message}`);
-                ui.notifications.error(`Moulinette Cloud Error: ${error.message}`);
+                console.error("Beneos Batch Importer | Catalog Fetch Error:", error);
+                this.logError(`Failed to fetch packages: ${error.message}`);
+                ui.notifications.error(`Beneos Catalog Error: ${error.message}`);
             } finally {
                 this.isLoading = false;
                 this.render({ force: true });
@@ -4072,120 +4118,59 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
                      * =================================================================================
                      */
 
-                    // Fetch pack info manifest directly from Moulinette Cloud
-                    const client = game.modules.get("moulinette")?.cloudclient;
-                    if (!client) {
-                        this.failedImportingIds.add(pkgId.toString());
-                        this.completedImportingIds.delete(pkgId.toString());
-                        
-                        this.importedCount++;
-                        const pct = Math.round((this.importedCount / this.totalToImport) * 100);
-                        html.find('.beneos-bi-progress-bar').css('width', `${pct}%`);
-                        const popup = html.find('.beneos-bi-popup-progress');
-                        if (popup.length > 0) {
-                            popup.find('.beneos-bi-popup-progress-bar').css('width', `${pct}%`);
-                            popup.find('.beneos-bi-popup-progress-text').text(`${pct}% (${this.importedCount} / ${this.totalToImport} completed)`);
-                        }
-
-                        this.logError(`Moulinette client missing, cannot download "${pkgName}". Skipping.`);
-                        this.importResults.push({
-                            name: pkgName,
-                            resolution: pkgResolution,
-                            status: "failed",
-                            error: "Moulinette client missing"
-                        });
-                        this.refreshList(html);
-                        continue;
-                    }
-                    
-                    try {
-                        packInfo = await client.apiPOST(`/scenepacker-assets/${pkgId}`, { 
-                            scope: {
-                                session: mtSession,
-                                mode: "cloud-accessible"
-                            }
-                        });
-                        if (!packInfo || typeof packInfo !== "object" || !packInfo["mtte.json"]) {
-                            throw new Error("Invalid or empty manifest returned from Moulinette Cloud");
-                        }
-                    } catch (err) {
-                        this.failedImportingIds.add(pkgId.toString());
-                        this.completedImportingIds.delete(pkgId.toString());
-                        
-                        this.importedCount++;
-                        const pct = Math.round((this.importedCount / this.totalToImport) * 100);
-                        html.find('.beneos-bi-progress-bar').css('width', `${pct}%`);
-                        const popup = html.find('.beneos-bi-popup-progress');
-                        if (popup.length > 0) {
-                            popup.find('.beneos-bi-popup-progress-bar').css('width', `${pct}%`);
-                            popup.find('.beneos-bi-popup-progress-text').text(`${pct}% (${this.importedCount} / ${this.totalToImport} completed)`);
-                        }
-
-                        this.logError(`Failed to fetch "${pkgName}" from Moulinette Cloud: ${err.message}. Skipping.`);
-                        this.importResults.push({
-                            name: pkgName,
-                            resolution: pkgResolution,
-                            status: "failed",
-                            error: err.message
-                        });
-                        this.refreshList(html);
-                        continue;
-                    }
-
-                    this.logStatus(`Initializing download queue for "${pkgName}"...`);
+                    this.logStatus(`[${i+1}/${this.totalToImport}] Initializing Beneos Cloud import for "${pkgName}"...`);
 
                     try {
-                        // Instantiate ScenePacker's Importer without sceneID limits to force absolute full-pack imports
-                        const importer = new MoulinetteImporter({
-                            packInfo: packInfo,
-                            sceneID: '',
-                            actorID: ''
-                        });
+                        let installed = false;
+                        
+                        // 1. Try Native Beneos Cloud Battlemap Installer (Cloud v2, in-house, no Moulinette / ScenePacker required)
+                        let NativeInstallerModule = null;
+                        try {
+                            NativeInstallerModule = await import('/modules/beneos-module/scripts/cloud-v2/beneos-native-installer.mjs');
+                        } catch (e) {
+                            console.warn("Beneos Batch Importer | Native installer module load failed:", e);
+                        }
 
-                        if (this.optionSuppressScenePacker) {
-                            // Completely suppress rendering of the importer window visually
-                            importer.render = function() { return this; };
-                            importer._render = function() { return Promise.resolve(this); };
+                        if (NativeInstallerModule?.BeneosNativeBattlemapInstaller) {
+                            this.logStatus(`Launching BeneosNativeBattlemapInstaller for "${pkgName}"...`);
+                            const installer = new NativeInstallerModule.BeneosNativeBattlemapInstaller({
+                                packageId: pkgId,
+                                label: pkgName,
+                                coverUrl: pkgInfoObj?.cover_image || null,
+                                overwrite: this.optionCleanInstall
+                            });
+                            await installer.run();
+                            installed = true;
+                        } else if (scenePacker?.importPackage) {
+                            // Fallback to BeneosScenePackerManager
+                            this.logStatus(`Launching BeneosScenePackerManager for "${pkgName}"...`);
+                            await scenePacker.importPackage(pkgId);
+                            installed = true;
                         } else {
-                            // Render small loading display if the importer is not already closed by auto-processing
-                            if (importer && importer.state !== -1) {
-                                try {
-                                    importer.render(true);
-                                } catch (e) {
-                                    console.warn("Beneos Batch Importer | Safe suppression of render error:", e);
-                                }
+                            // Legacy Moulinette fallback
+                            const client = game.modules.get("moulinette")?.cloudclient;
+                            const mtSession = game.settings.get("moulinette", "session_ID") || "";
+                            if (!client || !mtSession) {
+                                throw new Error("No installer available: Beneos Native Installer not found and Moulinette is inactive.");
                             }
+                            const packInfo = await client.apiPOST(`/scenepacker-assets/${pkgId}`, { 
+                                scope: { session: mtSession, mode: "cloud-accessible" }
+                            });
+                            if (!packInfo || !packInfo["mtte.json"]) throw new Error("Invalid manifest from Moulinette");
+                            const MoulinetteImporter = (await import('/modules/scene-packer/scripts/export-import/moulinette-importer.js')).default;
+                            const importer = new MoulinetteImporter({ packInfo, sceneID: '', actorID: '' });
+                            if (this.optionSuppressScenePacker) {
+                                importer.render = function() { return this; };
+                                importer._render = function() { return Promise.resolve(this); };
+                            }
+                            if (importer && typeof importer.process === "function") {
+                                await importer.process();
+                            }
+                            installed = true;
                         }
 
-                        // Move the Scene Packer Importer window side-by-side to the left of the Batch-Importer window
-                        try {
-                            if (importer && importer.setPosition && this.position && importer.element && importer.element.length > 0) {
-                                const batchPos = this.position;
-                                if (batchPos && typeof batchPos.left === 'number') {
-                                    const importerWidth = importer.position?.width || 560;
-                                    const targetLeft = Math.max(20, batchPos.left - importerWidth - 20);
-                                    importer.setPosition({
-                                        left: targetLeft,
-                                        top: batchPos.top || 100
-                                    });
-                                }
-                            }
-                        } catch (e) {
-                            console.warn("Beneos Batch Importer | Failed to position Scene Packer window side-by-side:", e);
-                        }
-
-                        // Execute procedural process pipeline
-                        if (importer && typeof importer.process === "function") {
-                            await importer.process();
-                        }
-
-                        // Safely close the temporary ScenePacker window
-                        try {
-                            if (importer && typeof importer.close === "function") {
-                                importer.close();
-                            }
-                        } catch (e) {
-                            console.warn("Beneos Batch Importer | Safe suppression of close error:", e);
+                        if (!installed) {
+                            throw new Error("Installation could not be started: no suitable installer engine found.");
                         }
 
                         this.completedImportingIds.add(pkgId.toString());
@@ -4254,7 +4239,7 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
                     // Increment session count
                     this.importedSinceReload++;
 
-                    // Save session state to sessionStorage in case of crash/reload
+                    // Save session state to sessionStorage in case of crash or manual cancellation
                     const remainingIds = selectedList.slice(i + 1);
                     const stateToSave = {
                         viewMode: this.viewMode,
@@ -4283,19 +4268,6 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
                         optionShowInfoPanel: this.optionShowInfoPanel
                     };
                     sessionStorage.setItem("beneos-batch-importer-resume-state", JSON.stringify(stateToSave));
-
-                    // Check memory reload limit (every 8 packages)
-                    if (this.importedSinceReload >= 8 && remainingIds.length > 0) {
-                        this.logStatus("--------------------------------------------------------------------------------", "info");
-                        this.logStatus("[V8 Heap Guard] To prevent WebGL/Chromium memory crash, VTT will now reload.", "info");
-                        this.logStatus("Queue state saved. Simply click the Batch Importer macro to resume instantly!", "success");
-                        this.logStatus("--------------------------------------------------------------------------------", "info");
-                        
-                        // Briefly wait so they can read the logs, then reload
-                        await new Promise(r => setTimeout(r, 4500));
-                        window.location.reload();
-                        return; // Stop execution
-                    }
                 }
 
                 this.logSuccess("Batch import processing completed.");
