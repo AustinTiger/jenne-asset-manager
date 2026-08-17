@@ -1,0 +1,191 @@
+<div class="jenne-container">
+  {{#if isScanning}}
+    <div class="jenne-loading-container">
+      <div class="jenne-spinner"></div>
+      <p class="jenne-loading-text"><i class="fas fa-hourglass-half"></i> Indexing asset database. Please wait...</p>
+    </div>
+  {{else}}
+    <!-- Left Sidebar (Configuration & Action Panel) -->
+    <aside class="jenne-sidebar">
+      <div class="jenne-sidebar-header">
+        <h3><i class="fas fa-sliders-h"></i> Control Panel</h3>
+        <button class="jenne-btn-icon" data-action="openSettings" title="Open Settings">
+          <i class="fas fa-cog"></i>
+        </button>
+      </div>
+      
+      <div class="jenne-publisher-list" style="padding: 16px; display: flex; flex-direction: column; gap: 16px;">
+        <!-- Columns count selector -->
+        <div class="toolbar-section flex-col">
+          <label for="column-picker"><i class="fas fa-th"></i> Preview Layout:</label>
+          <select class="jenne-compendium-select" id="column-picker" style="width: 100%;">
+            {{#each columnOptions}}
+              <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+            {{/each}}
+          </select>
+        </div>
+
+        <!-- Target Compendium Selection -->
+        <div class="toolbar-section flex-col">
+          <label for="compendium-target"><i class="fas fa-database"></i> Target Compendium:</label>
+          <select class="jenne-compendium-select" id="compendium-target" style="width: 100%;">
+            <option value="">-- Choose Target Pack --</option>
+            {{#each compendiums}}
+              <option value="{{id}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+            {{/each}}
+          </select>
+        </div>
+        
+        <!-- Subfolder input -->
+        <div class="toolbar-section flex-col">
+          <label for="folder-target"><i class="fas fa-folder-plus"></i> Subfolder (Optional):</label>
+          <input type="text" class="jenne-folder-input" id="folder-target" placeholder="e.g. Monsters/Goblins" value="{{subfolder}}" style="width: 100%;">
+        </div>
+
+        <!-- Catalog Scan / Refresh -->
+        <button class="jenne-btn btn-secondary" data-action="scan" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px;">
+          <i class="fas fa-sync-alt"></i> Re-Scan Library
+        </button>
+      </div>
+
+      <!-- Action Button at the bottom of the left sidebar -->
+      <div style="padding: 16px; border-top: 1px solid var(--border-color); margin-top: auto;">
+        <button class="jenne-btn btn-primary {{#unless anySelected}}disabled{{/unless}}" data-action="triggerImport" {{#unless anySelected}}disabled{{/unless}} style="width: 100%; height: 42px; display: flex; justify-content: center; align-items: center; gap: 8px; font-weight: bold; font-size: 13px;">
+          <i class="fas fa-download"></i> Import Selected ({{selectedCount}})
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Display -->
+    <main class="jenne-main">
+      <!-- Header -->
+      <header class="jenne-main-header">
+        <!-- Tabs -->
+        <nav class="jenne-nav-tabs">
+          {{#each tabs}}
+            <button class="jenne-tab {{#if active}}active{{/if}}" data-action="selectTab" data-tab-name="{{name}}">
+              <i class="fas {{icon}}"></i> {{label}}
+            </button>
+          {{/each}}
+        </nav>
+
+        <!-- Search and Selection controls -->
+        <div class="jenne-search-row">
+          <div class="jenne-search-container">
+            <i class="fas fa-search" style="position: absolute; left: 12px; top: 12px; color: #a4b0be;"></i>
+            <input type="text" class="jenne-search-input" placeholder="Search assets globally by name or category..." value="{{searchQuery}}">
+          </div>
+          <button class="jenne-btn btn-secondary" data-action="toggleSelectAll">
+            <i class="fas fa-check-double"></i> Select All
+          </button>
+        </div>
+
+        <!-- Tag Filters Checkboxes Bar -->
+        {{#if tagsList.length}}
+          <div class="jenne-tags-filter-bar">
+            <span class="filter-label"><i class="fas fa-filter"></i> Filter Tags:</span>
+            <div class="tag-filters-list">
+              {{#each tagsList}}
+                <label class="tag-checkbox-label">
+                  <input type="checkbox" class="jenne-tag-checkbox" data-tag-name="{{name}}" {{#if checked}}checked{{/if}}>
+                  <span class="tag-checkbox-custom"></span>
+                  <span class="tag-text">{{name}}</span>
+                </label>
+              {{/each}}
+            </div>
+          </div>
+        {{/if}}
+      </header>
+
+      <!-- Asset Grid -->
+      <section class="jenne-grid-container">
+        {{#if assets.length}}
+          <div class="jenne-asset-grid" style="grid-template-columns: repeat({{assetsPerRow}}, minmax(0, 1fr));">
+            {{#each assets}}
+              <div class="jenne-asset-card draggable {{#if selected}}selected{{/if}} {{#if imported}}imported{{/if}}" 
+                   data-asset-id="{{id}}" 
+                   data-relative-path="{{relativePath}}"
+                   data-filename="{{filename}}"
+                   data-asset-type="{{type}}"
+                   data-is-compendium="{{isCompendium}}"
+                   data-uuid="{{uuid}}"
+                   data-document-name="{{documentName}}"
+                   data-action="toggleSelect">
+                   
+                <div class="card-media">
+                  <!-- Preview Eye Button Overlay (No stopPropagation inline to allow ApplicationV2 bubbling) -->
+                  <button class="card-preview-btn" data-action="openPreview" data-asset-id="{{id}}" title="Preview Asset">
+                    <i class="fas fa-search-plus"></i>
+                  </button>
+
+                  {{#if (eq type 'image')}}
+                    <img src="{{relativePath}}" alt="{{filename}}" loading="lazy">
+                  {{else if (eq type 'video')}}
+                    <video src="{{relativePath}}" autoplay muted loop playsinline></video>
+                  {{else}}
+                    <div class="media-placeholder">
+                      <i class="fas {{iconClass}}"></i>
+                    </div>
+                  {{/if}}
+                  
+                  {{#if imported}}
+                    <div class="imported-overlay" data-action="openDocument" data-document-uuid="{{importedDocumentId}}" title="Imported! Click to view sheet.">
+                      <i class="fas fa-check-circle"></i>
+                    </div>
+                  {{/if}}
+                </div>
+                
+                <div class="card-info">
+                  <span class="filename" title="{{filename}}">{{filename}}</span>
+                </div>
+              </div>
+            {{/each}}
+          </div>
+        {{else}}
+          <div class="jenne-empty">
+            <i class="fas fa-folder-open"></i>
+            <p>No assets found matching the criteria.</p>
+          </div>
+        {{/if}}
+      </section>
+    </main>
+  {{/if}}
+
+  <!-- Sleek Lightbox Preview Modal -->
+  {{#if previewAsset}}
+    <div class="jenne-preview-modal" data-action="closePreview">
+      <div class="preview-modal-content" onclick="event.stopPropagation()">
+        <button class="preview-close-btn" data-action="closePreview" title="Close Preview">&times;</button>
+        
+        {{#if (eq previewAsset.type 'image')}}
+          <img src="{{previewAsset.relativePath}}" alt="{{previewAsset.filename}}">
+        {{else if (eq previewAsset.type 'video')}}
+          <video src="{{previewAsset.relativePath}}" autoplay loop controls></video>
+        {{else if (eq previewAsset.type 'audio')}}
+          <div class="audio-preview-card">
+            <i class="fas fa-music audio-preview-icon"></i>
+            <span class="audio-filename">{{previewAsset.filename}}</span>
+            
+            <div class="audio-controls">
+              <button class="audio-btn play-btn" data-action="playAudio" data-path="{{previewAsset.relativePath}}">
+                <i class="fas fa-play"></i> PLAY
+              </button>
+              <button class="audio-btn stop-btn" data-action="stopAudio">
+                <i class="fas fa-stop"></i> STOP
+              </button>
+              <div class="volume-control">
+                <i class="fas fa-volume-up"></i>
+                <input type="range" class="volume-slider" min="0" max="1" step="0.05" value="0.5">
+              </div>
+            </div>
+          </div>
+        {{/if}}
+        
+        <div class="preview-details">
+          <span class="preview-filename">{{previewAsset.filename}}</span>
+          <span class="preview-path">{{previewAsset.relativePath}}</span>
+        </div>
+      </div>
+    </div>
+  {{/if}}
+</div>

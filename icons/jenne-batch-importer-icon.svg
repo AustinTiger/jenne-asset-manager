@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <!-- Folded Map Background (Semi-transparent) -->
+  <path d="M 70 150 L 190 100 L 190 410 L 70 460 Z" fill="#a7a5a7" opacity="0.35" />
+  <path d="M 190 100 L 320 150 L 320 460 L 190 410 Z" fill="#a7a5a7" opacity="0.2" />
+  <path d="M 320 150 L 442 100 L 442 410 L 320 460 Z" fill="#a7a5a7" opacity="0.35" />
+
+  <!-- Gothic Letter J centered and scaled -->
+  <g transform="translate(256, 260) scale(1.6) translate(-256, -332)">
+    <path d="M 260 250 
+             C 237 250, 220 262, 220 277
+             C 220 288, 228 297, 239 301
+             C 247 299, 249 288, 245 283
+             C 239 278, 242 269, 257 269
+             L 291 269
+             L 291 365
+             C 291 400, 270 432, 222 432
+             C 200 432, 183 422, 183 411
+             C 183 401, 193 393, 202 397
+             C 209 403, 209 414, 223 414
+             C 242 414, 256 395, 256 368
+             L 256 269
+             L 315 269
+             L 329 250
+             L 293 250
+             L 280 233
+             L 267 250 Z" 
+          fill="#a7a5a7" />
+  </g>
+</svg>

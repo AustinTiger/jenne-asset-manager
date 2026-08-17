@@ -1,0 +1,37 @@
+<div class="jenne-ddb-patch-container">
+  <header class="patch-header">
+    <h2><i class="fab fa-d-and-d"></i> D&D Beyond Importer Patreon Unlock</h2>
+    <p class="patch-subtext">Unlock Patreon-exclusive features for free by patching the DDB Importer module.</p>
+  </header>
+
+  <section class="patch-body">
+    <div class="patch-warning-card">
+      <i class="fas fa-exclamation-triangle warning-icon"></i>
+      <p><strong>Required Step:</strong> Because client-side Javascript cannot modify files directly on your computer's drive for security reasons, you must run a short PowerShell command on your host machine to apply the patch.</p>
+    </div>
+
+    <div class="instructions-steps">
+      <ol>
+        <li>Open <strong>PowerShell</strong> on your computer.</li>
+        <li>Copy and execute the command below to run the local patch script:</li>
+      </ol>
+    </div>
+
+    <div class="command-box-container">
+      <code class="command-text" id="ddb-command-line">powershell -File "d:\FoundryVtt\Data\modules\jenne-suite\scripts\Patch-DDBImporter.ps1"</code>
+      <button class="jenne-btn btn-secondary copy-cmd-btn" data-action="copyCommand" title="Copy to Clipboard">
+        <i class="fas fa-copy"></i> Copy
+      </button>
+    </div>
+
+    <div class="patch-note">
+      <p><i class="fas fa-info-circle"></i> <strong>Note:</strong> Once patched, refresh your browser tab or restart Foundry to load the unlocked features. If you update the DDB Importer module in the future, you will need to run this command again.</p>
+    </div>
+  </section>
+
+  <footer class="patch-footer">
+    <button class="jenne-btn btn-primary close-patch-btn" data-action="closeWindow">
+      <i class="fas fa-check"></i> Got It
+    </button>
+  </footer>
+</div>

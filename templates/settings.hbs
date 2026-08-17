@@ -1,0 +1,98 @@
+<div class="jenne-settings-container">
+  <header class="settings-header">
+    <h2><i class="fas fa-folder-open"></i> Manage Asset Sources</h2>
+    <p class="settings-subtext">Add local directories or compendium packs containing your maps, tokens, audio, and items.</p>
+  </header>
+
+  <section class="settings-body">
+    {{#if hasDirectories}}
+      <div class="settings-rows-list">
+        <div class="settings-row header-row">
+          <span class="col-type">Asset Type</span>
+          <span class="col-source">Source Mode</span>
+          <span class="col-path">Path / Compendium</span>
+          <span class="col-actions">Actions</span>
+        </div>
+
+        {{#each directories}}
+          <div class="settings-row dir-row flex-col-row" data-index="{{index}}">
+            <div class="row-top-inputs">
+              <!-- Type Dropdown -->
+              <div class="col-type">
+                <select class="jenne-setting-type jenne-compendium-select" data-index="{{index}}">
+                  {{#each types}}
+                    <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+                  {{/each}}
+                </select>
+              </div>
+
+              <!-- Source Mode Dropdown -->
+              <div class="col-source">
+                <select class="jenne-setting-mode jenne-compendium-select" data-index="{{index}}">
+                  {{#each modes}}
+                    <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+                  {{/each}}
+                </select>
+              </div>
+              
+              <!-- Dynamic Path / Compendium Selection -->
+              <div class="col-path">
+                {{#if (eq sourceMode 'directory')}}
+                  <div class="input-group">
+                    <input type="text" class="jenne-setting-path jenne-folder-input" data-index="{{index}}" value="{{path}}" placeholder="e.g. assets/tokens">
+                    <button class="jenne-btn btn-secondary browse-btn" data-action="browseDirectory" data-index="{{index}}" title="Browse Folder">
+                      <i class="fas fa-folder-open"></i>
+                    </button>
+                  </div>
+                {{else}}
+                  <select class="jenne-setting-compendium jenne-compendium-select" data-index="{{index}}" style="width: 100%;">
+                    <option value="">-- Choose Compendium Pack --</option>
+                    {{#each compendiumsList}}
+                      <option value="{{id}}" {{#if (eq id ../compendium)}}selected{{/if}}>{{label}}</option>
+                    {{/each}}
+                  </select>
+                {{/if}}
+              </div>
+
+              <!-- Delete Button -->
+              <div class="col-actions">
+                <button class="jenne-btn btn-danger delete-btn" data-action="deleteDirectory" data-index="{{index}}" title="Delete Row">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Dynamic Tag Selection Chips -->
+            {{#if allowedTags.length}}
+              <div class="row-tags-block">
+                <span class="tags-label"><i class="fas fa-tags"></i> Filter Tags:</span>
+                <div class="tag-chips-list">
+                  {{#each allowedTags}}
+                    <button class="tag-chip {{#if active}}active{{/if}}" data-action="toggleTag" data-row-index="{{../index}}" data-tag-name="{{name}}">
+                      {{name}}
+                    </button>
+                  {{/each}}
+                </div>
+              </div>
+            {{/if}}
+          </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <div class="settings-empty-state">
+        <i class="fas fa-search-location empty-icon"></i>
+        <p>No asset sources configured.</p>
+        <p class="sub-hint">Click the button below to add your first source.</p>
+      </div>
+    {{/if}}
+  </section>
+
+  <footer class="settings-footer">
+    <button class="jenne-btn btn-secondary add-btn" data-action="addDirectory">
+      <i class="fas fa-plus"></i> Add Source
+    </button>
+    <button class="jenne-btn btn-primary save-btn" data-action="saveSettings">
+      <i class="fas fa-save"></i> Save Settings
+    </button>
+  </footer>
+</div>

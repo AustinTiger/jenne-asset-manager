@@ -1,0 +1,1416 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap');
+
+/* Jenne Asset Manager - Sleek Modern Dark Mode with Beneos Gold/Mahogany Palette */
+
+.jenne-asset-manager {
+  --bg-primary: #0d0a08;
+  --bg-secondary: #130f0c;
+  --bg-tertiary: #1b1612;
+  
+  --border-color: rgba(212, 168, 87, 0.18);
+  --border-color-glow: rgba(212, 168, 87, 0.4);
+  
+  --text-main: #f0ebd8;
+  --text-muted: #999480;
+  --text-active: #f0d486;
+  
+  --primary-accent: linear-gradient(180deg, #d4a857 0%, #bda26f 100%);
+  --primary-accent-hover: linear-gradient(180deg, #f0d486 0%, #d4a857 100%);
+  --secondary-accent: rgba(212, 168, 87, 0.08);
+  --secondary-accent-hover: rgba(212, 168, 87, 0.15);
+  
+  --danger-color: #782e22;
+  --success-color: #6dae11;
+  --warning-color: #e8b556;
+
+  color: var(--text-main);
+  background: var(--bg-primary) !important;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
+}
+
+/* Epic Fantasy Headers, Buttons and Tabs (Cinzel font) */
+.jenne-asset-manager h1,
+.jenne-asset-manager h2,
+.jenne-asset-manager h3,
+.jenne-asset-manager h4,
+.jenne-asset-manager h5,
+.jenne-asset-manager h6,
+.jenne-asset-manager .jenne-tab,
+.jenne-asset-manager .jenne-btn,
+.jenne-sidebar-btn {
+  font-family: 'Cinzel', Georgia, serif !important;
+  letter-spacing: 0.08em;
+}
+
+/* Base Window overrides */
+.jenne-asset-manager .window-content {
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+/* Master Container */
+.jenne-container {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  background: var(--bg-primary);
+}
+
+/* Sidebar Layout */
+.jenne-sidebar {
+  width: 260px;
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-color);
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  backdrop-filter: blur(10px);
+}
+
+.jenne-sidebar-header {
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.jenne-sidebar-header h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  color: var(--text-main);
+}
+
+.jenne-publisher-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.jenne-publisher-group {
+  margin-bottom: 8px;
+}
+
+.jenne-publisher-title {
+  padding: 8px 12px;
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.jenne-publisher-title:hover {
+  background: var(--secondary-accent);
+  color: var(--text-main);
+}
+
+.jenne-publisher-group.active .jenne-publisher-title {
+  color: var(--text-main);
+  background: hsla(230, 80%, 60%, 0.1);
+  border-left: 3px solid hsl(230, 80%, 60%);
+}
+
+.jenne-pack-list {
+  list-style: none;
+  padding: 4px 0 4px 16px;
+  margin: 0;
+}
+
+.jenne-pack-item {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: all 0.2s ease;
+  margin-top: 2px;
+}
+
+.jenne-pack-item:hover {
+  background: var(--secondary-accent);
+  color: var(--text-main);
+}
+
+.jenne-pack-item.active {
+  color: var(--text-active);
+  font-weight: 600;
+  background: hsla(230, 80%, 60%, 0.15);
+}
+
+.badge {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge.legacy {
+  background: var(--warning-color);
+  color: #000;
+}
+
+/* Main Display Area */
+.jenne-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-tertiary);
+  backdrop-filter: blur(10px);
+}
+
+.jenne-main-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: hsla(220, 23%, 12%, 0.3);
+}
+
+/* Custom Tabs */
+.jenne-nav-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.jenne-tab {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 8px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.jenne-tab:hover {
+  background: var(--secondary-accent);
+  color: var(--text-main);
+}
+
+.jenne-tab.active {
+  background: var(--primary-accent);
+  color: #fff;
+  box-shadow: 0 4px 14px hsla(230, 80%, 60%, 0.4);
+}
+
+/* Search bar styling */
+.jenne-search-row {
+  display: flex;
+  gap: 12px;
+}
+
+.jenne-search-container {
+  position: relative;
+  flex: 1;
+}
+
+.jenne-search-input {
+  width: 100%;
+  background: var(--bg-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
+  padding: 8px 12px 8px 36px !important;
+  border-radius: 6px !important;
+  transition: all 0.2s ease;
+  font-size: 13px;
+}
+
+.jenne-search-input:focus {
+  border-color: hsl(230, 80%, 60%) !important;
+  box-shadow: 0 0 8px var(--border-color-glow) !important;
+}
+
+/* Buttons */
+.jenne-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+  color: #fff;
+}
+
+.btn-primary {
+  background: var(--primary-accent);
+  box-shadow: 0 4px 10px hsla(230, 80%, 60%, 0.3);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: var(--primary-accent-hover);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background: var(--secondary-accent);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background: var(--secondary-accent-hover);
+}
+
+.jenne-btn-icon {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.jenne-btn-icon:hover {
+  background: var(--secondary-accent);
+  color: var(--text-main);
+}
+
+.jenne-btn:disabled, .jenne-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Grid layout */
+.jenne-grid-container {
+  flex: 1;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.jenne-asset-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 16px;
+}
+
+/* Asset Cards */
+.jenne-asset-card {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.jenne-asset-card:hover {
+  transform: translateY(-3px);
+  border-color: hsl(230, 80%, 65%);
+  box-shadow: 0 6px 15px hsla(0, 0%, 0%, 0.4), 0 0 8px var(--border-color-glow);
+}
+
+.jenne-asset-card.selected {
+  border-color: hsl(230, 80%, 60%);
+  background: hsla(230, 80%, 60%, 0.08);
+  box-shadow: 0 0 12px var(--border-color-glow);
+}
+
+.card-media {
+  aspect-ratio: 1;
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.card-media img, .card-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.media-placeholder {
+  font-size: 32px;
+  color: var(--text-muted);
+}
+
+/* Imported checkmarks */
+.imported-overlay {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  font-size: 18px;
+  color: var(--success-color);
+  background: rgba(0, 0, 0, 0.7);
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease;
+}
+
+.imported-overlay:hover {
+  transform: scale(1.15);
+}
+
+.jenne-asset-card.imported {
+  border-color: hsla(142, 70%, 45%, 0.3);
+}
+
+.card-info {
+  padding: 8px;
+  text-align: center;
+  border-top: 1px solid var(--border-color);
+  background: hsla(220, 23%, 12%, 0.4);
+}
+
+.filename {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-main);
+  display: block;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Empty State */
+.jenne-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-muted);
+  gap: 16px;
+}
+
+.jenne-empty i {
+  font-size: 48px;
+}
+
+/* Toolbar Footer */
+.jenne-footer-toolbar {
+  padding: 16px;
+  border-top: 1px solid var(--border-color);
+  background: hsla(220, 23%, 12%, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.toolbar-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.toolbar-section label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.jenne-compendium-select, .jenne-folder-input {
+  background: var(--bg-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-main) !important;
+  padding: 6px 12px !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  height: 32px !important;
+}
+
+.jenne-compendium-select {
+  width: 220px;
+}
+
+.jenne-folder-input {
+  width: 180px;
+}
+
+.jenne-footer-toolbar button {
+  margin-left: auto;
+  height: 34px;
+}
+
+/* Custom Sidebar and Controls Icon */
+.jenne-custom-icon {
+  mask: url('../icons/jenne-icon.svg') no-repeat center !important;
+  mask-size: contain !important;
+  -webkit-mask: url('../icons/jenne-icon.svg') no-repeat center !important;
+  -webkit-mask-size: contain !important;
+  background-color: currentColor !important;
+  width: 1.4rem !important;
+  height: 1.4rem !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
+
+
+.jenne-batch-importer-icon {
+  mask: url('../icons/jenne-batch-importer-icon.svg') no-repeat center !important;
+  mask-size: contain !important;
+  -webkit-mask: url('../icons/jenne-batch-importer-icon.svg') no-repeat center !important;
+  -webkit-mask-size: contain !important;
+  background-color: currentColor !important;
+  width: 1.4rem !important;
+  height: 1.4rem !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+}
+
+.control-tool[data-tool="jenne-asset-manager"] i {
+  mask: url('../icons/jenne-icon.svg') no-repeat center !important;
+  mask-size: contain !important;
+  -webkit-mask: url('../icons/jenne-icon.svg') no-repeat center !important;
+  -webkit-mask-size: contain !important;
+  background-color: currentColor !important;
+  width: 1.4rem !important;
+  height: 1.4rem !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  transition: transform 0.15s ease !important;
+}
+
+.control-tool[data-tool="jenne-asset-manager"]:hover i {
+  transform: scale(1.1) !important;
+}
+
+.control-tool[data-tool="jenne-asset-manager"].active i {
+  transform: scale(1.1) !important;
+}
+
+.control-tool[data-tool="beneos-batch-importer"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  padding: 0 !important;
+}
+
+.control-tool[data-tool="beneos-batch-importer"] i {
+  mask: url('../icons/jenne-batch-importer-icon.svg') no-repeat center !important;
+  mask-size: contain !important;
+  -webkit-mask: url('../icons/jenne-batch-importer-icon.svg') no-repeat center !important;
+  -webkit-mask-size: contain !important;
+  background-color: currentColor !important;
+  width: 1.4rem !important;
+  height: 1.4rem !important;
+  display: inline-block !important;
+  vertical-align: middle !important;
+  transition: transform 0.15s ease !important;
+}
+
+.control-tool[data-tool="beneos-batch-importer"]:hover i {
+  transform: scale(1.1) !important;
+}
+
+.control-tool[data-tool="beneos-batch-importer"].active i {
+  transform: scale(1.1) !important;
+}
+
+/* Loading Spinner */
+.jenne-loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  gap: 20px;
+  color: var(--text-muted);
+}
+
+.jenne-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid var(--border-color);
+  border-top-color: hsl(230, 80%, 65%);
+  border-radius: 50%;
+  animation: jenne-spin 1s linear infinite;
+  box-shadow: 0 0 15px var(--border-color-glow);
+}
+
+.jenne-loading-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-main);
+  letter-spacing: 0.5px;
+  animation: jenne-pulse 2s ease-in-out infinite;
+}
+
+@keyframes jenne-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes jenne-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* Custom Settings Window Styles */
+.jenne-settings-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 16px;
+  background: var(--bg-primary);
+  color: var(--text-main);
+  box-sizing: border-box;
+}
+
+.settings-header {
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
+}
+
+.settings-header h2 {
+  margin: 0 0 6px 0;
+  font-size: 18px;
+  color: var(--text-active);
+}
+
+.settings-subtext {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.settings-body {
+  flex: 1;
+  overflow-y: auto;
+  margin-bottom: 16px;
+  padding-right: 4px;
+}
+
+.settings-rows-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.settings-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+}
+
+.settings-row.header-row {
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  padding: 4px 8px;
+}
+
+.col-type {
+  width: 120px;
+  flex-shrink: 0;
+}
+
+.col-path {
+  flex: 1;
+}
+
+.col-actions {
+  width: 60px;
+  flex-shrink: 0;
+  text-align: center;
+}
+
+.col-path.input-group {
+  display: flex;
+  gap: 6px;
+}
+
+.col-path.input-group input {
+  flex: 1;
+}
+
+.browse-btn {
+  padding: 0 10px !important;
+  height: 32px !important;
+}
+
+.delete-btn {
+  background: var(--danger-color) !important;
+  color: #fff !important;
+  padding: 6px 12px !important;
+}
+
+.delete-btn:hover {
+  filter: brightness(1.2);
+}
+
+.settings-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 16px;
+  color: var(--text-muted);
+  gap: 12px;
+}
+
+.empty-icon {
+  font-size: 40px;
+  color: var(--border-color-glow);
+}
+
+.sub-hint {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+.settings-footer {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+}
+
+/* Button variants */
+.btn-danger {
+  background: var(--danger-color);
+}
+
+/* Preview Modal Styles */
+.jenne-preview-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.preview-modal-content {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color-glow);
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+  padding: 24px;
+  position: relative;
+  max-width: 80vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: jenne-zoom-in 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes jenne-zoom-in {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.preview-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  font-size: 24px;
+  cursor: pointer;
+  line-height: 1;
+  transition: color 0.15s ease;
+}
+
+.preview-close-btn:hover {
+  color: var(--text-active);
+}
+
+.preview-modal-content img, 
+.preview-modal-content video {
+  max-width: 100%;
+  max-height: 50vh;
+  border-radius: 6px;
+  object-fit: contain;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.audio-preview-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  padding: 24px 32px;
+  border-radius: 8px;
+  width: 320px;
+}
+
+.audio-preview-icon {
+  font-size: 48px;
+  color: var(--text-active);
+  animation: jenne-music-bounce 1.5s ease-in-out infinite alternate;
+}
+
+@keyframes jenne-music-bounce {
+  from { transform: translateY(0); }
+  to { transform: translateY(-8px); }
+}
+
+.audio-filename {
+  font-size: 13px;
+  font-weight: bold;
+  text-align: center;
+  word-break: break-all;
+}
+
+.audio-controls {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.audio-controls .audio-btn {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 11px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.play-btn {
+  background: var(--primary-accent);
+}
+
+.play-btn:hover {
+  background: var(--primary-accent-hover);
+}
+
+.stop-btn {
+  background: var(--danger-color);
+}
+
+.stop-btn:hover {
+  filter: brightness(1.2);
+}
+
+.volume-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text-muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.volume-slider {
+  flex: 1;
+  height: 4px;
+  accent-color: var(--text-active);
+  cursor: pointer;
+}
+
+.preview-details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.preview-filename {
+  font-size: 14px;
+  font-weight: bold;
+  color: var(--text-main);
+}
+
+.preview-path {
+  font-size: 11px;
+  color: var(--text-muted);
+  word-break: break-all;
+}
+
+.card-preview-btn {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  width: 26px;
+  height: 26px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: var(--text-main);
+  opacity: 0;
+  cursor: pointer;
+  transition: opacity 0.2s ease, background 0.2s ease, transform 0.2s ease;
+  z-index: 5;
+}
+
+.card-preview-btn:hover {
+  background: var(--primary-accent);
+  border-color: var(--text-active);
+  transform: scale(1.1);
+}
+
+.jenne-asset-card:hover .card-preview-btn {
+  opacity: 1;
+}
+
+/* Sidebar Layout helper styles */
+.toolbar-section.flex-col {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: stretch;
+}
+
+.toolbar-section.flex-col label {
+  margin: 0 !important;
+  font-family: 'Cinzel', Georgia, serif !important;
+  font-size: 11px !important;
+  font-weight: bold !important;
+  letter-spacing: 0.05em !important;
+  color: var(--text-muted) !important;
+}
+
+/* Center Jenne Asset Manager button in Token Controls sidebar */
+.control-tool[data-tool="jenne-asset-manager"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  padding: 0 !important;
+}
+
+.control-tool[data-tool="jenne-asset-manager"] i.jenne-custom-icon,
+.control-tool[data-tool="jenne-asset-manager"] .jenne-custom-icon {
+  display: block !important;
+  width: 20px !important;
+  height: 20px !important;
+  margin: 0 !important;
+}
+
+/* Custom Settings Row Layout */
+.settings-row.flex-col-row {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  padding: 12px;
+}
+
+.row-top-inputs {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.col-type {
+  width: 130px;
+  flex-shrink: 0;
+}
+
+.col-source {
+  width: 130px;
+  flex-shrink: 0;
+}
+
+.col-path {
+  flex: 1;
+}
+
+.col-actions {
+  width: 40px;
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.row-tags-block {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 1px solid rgba(212, 168, 87, 0.1);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+.tags-label {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.tag-chips-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tag-chip {
+  background: rgba(212, 168, 87, 0.05) !important;
+  border: 1px solid rgba(212, 168, 87, 0.15) !important;
+  color: var(--text-muted) !important;
+  padding: 3px 8px !important;
+  font-size: 10px !important;
+  border-radius: 4px !important;
+  cursor: pointer !important;
+  transition: all 0.15s ease !important;
+  font-family: inherit !important;
+}
+
+.tag-chip:hover {
+  background: rgba(212, 168, 87, 0.15) !important;
+  color: var(--text-main) !important;
+  border-color: var(--text-active) !important;
+}
+
+.tag-chip.active {
+  background: var(--primary-accent) !important;
+  color: #000 !important;
+  border-color: var(--text-active) !important;
+  font-weight: 600 !important;
+}
+
+/* Tab container flex wrap adaptation for 13 categories */
+.jenne-nav-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+}
+
+.jenne-tab {
+  padding: 6px 12px !important;
+  font-size: 11px !important;
+}
+
+/* Main GUI Tag Filters Bar */
+.jenne-tags-filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+}
+
+.filter-label {
+  font-family: 'Cinzel', Georgia, serif;
+  font-size: 11px;
+  font-weight: bold;
+  letter-spacing: 0.05em;
+  color: var(--text-active);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tag-filters-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.tag-checkbox-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 11px;
+  color: var(--text-muted);
+  user-select: none;
+  transition: color 0.15s ease;
+}
+
+.tag-checkbox-label:hover {
+  color: var(--text-main);
+}
+
+.tag-checkbox-label input[type="checkbox"] {
+  display: none;
+}
+
+.tag-checkbox-custom {
+  width: 14px;
+  height: 14px;
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  background: var(--bg-primary);
+  display: inline-block;
+  position: relative;
+  transition: all 0.15s ease;
+}
+
+.tag-checkbox-label input[type="checkbox"]:checked + .tag-checkbox-custom {
+  background: var(--text-active);
+  border-color: var(--text-active);
+}
+
+.tag-checkbox-label input[type="checkbox"]:checked + .tag-checkbox-custom::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid #000;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.tag-checkbox-label input[type="checkbox"]:checked ~ .tag-text {
+  color: var(--text-active);
+  font-weight: 500;
+}
+/* Center and box the Jenne Suite sidebar button and sub-tools */
+[data-control="jenne-suite"],
+[data-control="jenneSuite"],
+[data-tool="jenne-asset-manager"],
+[data-tool="beneos-batch-importer"],
+[data-tool="ddb-patcher"],
+[data-tool="jenne-auto-color"],
+[data-tool="party-crunch"],
+[data-tool="jenne-table-forge-importer"] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 36px !important;
+  height: 36px !important;
+  border: 1px solid var(--control-border-color, rgba(255, 255, 255, 0.15)) !important;
+  border-radius: 4px !important;
+  background: var(--control-bg-color, rgba(20, 20, 20, 0.85)) !important;
+  cursor: pointer !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+}
+
+[data-control="jenne-suite"]:hover,
+[data-control="jenneSuite"]:hover,
+[data-tool="jenne-asset-manager"]:hover,
+[data-tool="beneos-batch-importer"]:hover,
+[data-tool="ddb-patcher"]:hover,
+[data-tool="jenne-auto-color"]:hover,
+[data-tool="party-crunch"]:hover,
+[data-tool="jenne-table-forge-importer"]:hover {
+  border-color: var(--control-hover-border-color, #ff3c00) !important;
+  background: var(--control-hover-bg-color, rgba(40, 40, 40, 0.95)) !important;
+}
+
+[data-control="jenne-suite"].active,
+[data-control="jenneSuite"].active,
+[data-tool="jenne-asset-manager"].active,
+[data-tool="beneos-batch-importer"].active,
+[data-tool="ddb-patcher"].active,
+[data-tool="jenne-auto-color"].active,
+[data-tool="party-crunch"].active,
+[data-tool="jenne-table-forge-importer"].active,
+[data-control="jenne-suite"][aria-pressed="true"],
+[data-control="jenneSuite"][aria-pressed="true"],
+[data-tool="jenne-asset-manager"][aria-pressed="true"],
+[data-tool="beneos-batch-importer"][aria-pressed="true"],
+[data-tool="ddb-patcher"][aria-pressed="true"],
+[data-tool="jenne-auto-color"][aria-pressed="true"],
+[data-tool="party-crunch"][aria-pressed="true"],
+[data-tool="jenne-table-forge-importer"][aria-pressed="true"] {
+  border-color: var(--control-active-border-color, #ff6400) !important;
+  background: var(--control-active-bg-color, rgba(60, 60, 60, 0.95)) !important;
+  box-shadow: 0 0 8px var(--control-active-border-color, rgba(255, 100, 0, 0.4)) !important;
+  color: var(--control-active-icon-color, #ff6400) !important;
+}
+
+/* Custom icon masks using pseudo-elements to prevent clipping */
+.jenne-custom-icon[data-tool],
+.jenne-gothic-j-icon[data-control],
+.jenne-batch-importer-icon[data-tool] {
+  mask: none !important;
+  -webkit-mask: none !important;
+  background-color: unset !important;
+}
+
+/* Custom icon pseudo-elements mapping */
+.jenne-custom-icon[data-tool]::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 20px !important;
+  height: 20px !important;
+  background-color: currentColor !important;
+  mask: url('../icons/jenne-icon.svg') no-repeat center !important;
+  mask-size: contain !important;
+  -webkit-mask: url('../icons/jenne-icon.svg') no-repeat center !important;
+  -webkit-mask-size: contain !important;
+  transition: transform 0.15s ease !important;
+  pointer-events: none !important;
+}
+
+.jenne-gothic-j-icon[data-control]::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 20px !important;
+  height: 20px !important;
+  background-color: currentColor !important;
+  mask: url('../icons/jenne-suite-icon.svg') no-repeat center !important;
+  mask-size: contain !important;
+  -webkit-mask: url('../icons/jenne-suite-icon.svg') no-repeat center !important;
+  -webkit-mask-size: contain !important;
+  transition: transform 0.15s ease !important;
+  pointer-events: none !important;
+}
+
+.jenne-batch-importer-icon[data-tool]::after {
+  content: "" !important;
+  display: block !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  width: 20px !important;
+  height: 20px !important;
+  background-color: currentColor !important;
+  mask: url('../icons/jenne-batch-importer-icon.svg') no-repeat center !important;
+  mask-size: contain !important;
+  -webkit-mask: url('../icons/jenne-batch-importer-icon.svg') no-repeat center !important;
+  -webkit-mask-size: contain !important;
+  transition: transform 0.15s ease !important;
+  pointer-events: none !important;
+}
+
+/* Scaling on hover/active states for pseudo-elements */
+.jenne-custom-icon[data-tool]:hover::after,
+.jenne-gothic-j-icon[data-control]:hover::after,
+.jenne-batch-importer-icon[data-tool]:hover::after {
+  transform: translate(-50%, -50%) scale(1.1) !important;
+}
+
+.jenne-custom-icon[data-tool].active::after,
+.jenne-gothic-j-icon[data-control].active::after,
+.jenne-batch-importer-icon[data-tool].active::after {
+  transform: translate(-50%, -50%) scale(1.1) !important;
+  background-color: #000 !important;
+}
+
+/* Font Awesome controls adjustments */
+.fa-users-viewfinder[data-tool],
+.fa-palette[data-tool],
+.fa-d-and-d[data-tool] {
+  color: var(--text-main, #ddd) !important;
+}
+
+.fa-users-viewfinder[data-tool]:hover,
+.fa-palette[data-tool]:hover,
+.fa-d-and-d[data-tool]:hover {
+  color: var(--control-hover-icon-color, #ff6400) !important;
+}
+
+.fa-users-viewfinder[data-tool].active,
+.fa-palette[data-tool].active,
+.fa-d-and-d[data-tool].active {
+  color: #000 !important;
+}
+
+
+/* Jenne DDB Patch Window container and elements */
+.jenne-ddb-patch-container {
+  padding: 16px;
+  background: var(--bg-primary);
+  color: var(--text-main);
+  box-sizing: border-box;
+}
+
+.patch-header {
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+}
+
+.patch-header h2 {
+  margin: 0 0 6px 0;
+  font-size: 18px;
+  color: var(--text-active);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.patch-header h2 i {
+  color: #ff3c3c; /* Red color highlight for D&D icon */
+}
+
+.patch-subtext {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.patch-warning-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(120, 46, 34, 0.15); /* Mahogany/Red warning background */
+  border: 1px solid rgba(120, 46, 34, 0.4);
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.patch-warning-card .warning-icon {
+  font-size: 20px;
+  color: var(--danger-color);
+  margin-top: 2px;
+}
+
+.patch-warning-card p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-main);
+}
+
+.instructions-steps {
+  margin-bottom: 12px;
+}
+
+.instructions-steps ol {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.instructions-steps li {
+  font-size: 13px;
+  margin-bottom: 6px;
+  line-height: 1.4;
+  color: var(--text-main);
+}
+
+.command-box-container {
+  display: flex;
+  gap: 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 8px 12px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.command-text {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  color: var(--text-active);
+  white-space: nowrap;
+  overflow-x: auto;
+  flex: 1;
+  user-select: all;
+  padding-right: 8px;
+}
+
+.command-text::-webkit-scrollbar {
+  height: 4px;
+}
+
+.command-text::-webkit-scrollbar-thumb {
+  background: var(--border-color-glow);
+  border-radius: 2px;
+}
+
+.copy-cmd-btn {
+  white-space: nowrap;
+  font-size: 11px !important;
+  padding: 6px 12px !important;
+  height: 28px !important;
+}
+
+.patch-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-top: 8px;
+  margin-bottom: 16px;
+}
+
+.patch-note i {
+  color: var(--text-active);
+  margin-right: 4px;
+}
+
+.patch-footer {
+  border-top: 1px solid var(--border-color);
+  padding-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.close-patch-btn {
+  padding: 8px 20px !important;
+  font-size: 12px !important;
+}
+
+.jenne-ddb-patch-window .window-content {
+  padding: 0 !important;
+  background: transparent !important;
+}
+
+

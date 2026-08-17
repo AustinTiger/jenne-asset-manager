@@ -1,0 +1,43 @@
+{
+  "id": "jenne-asset-manager",
+  "title": "Jenne Asset Manager",
+  "description": "A local-first asset manager and batch importer for FoundryVTT v14. Tracks imported assets via custom unique IDs and maintains support for Beneos Battlemaps legacy parsing.",
+  "version": "1.0.0",
+  "authors": [
+    {
+      "name": "Antigravity & John"
+    }
+  ],
+  "compatibility": {
+    "minimum": "13",
+    "verified": "14"
+  },
+  "esmodules": [
+    "scripts/init.mjs"
+  ],
+  "styles": [
+    "css/asset-manager.css"
+  ],
+  "relationships": {
+    "requires": [
+      {
+        "id": "jenne-suite",
+        "type": "module"
+      },
+      {
+        "id": "scene-packer",
+        "type": "module"
+      },
+      {
+        "id": "monks-active-tiles",
+        "type": "module"
+      }
+    ]
+  },
+  "flags": {
+    "hotReload": {
+      "extensions": ["css", "hbs", "html", "json"],
+      "paths": ["css/", "templates/"]
+    }
+  }
+}
