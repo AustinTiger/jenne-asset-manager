@@ -516,16 +516,18 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
                 }
 
                 for (const pkg of matchingPackages) {
-                    const pkgNameLower = pkg.name.toLowerCase();
-                    const is4K = pkgNameLower.includes("4k") || pkgNameLower.includes("uhd") || pkgNameLower.includes("ultra hd");
-                    const isHD = !is4K;
+                    const variants = (pkg.variants || []).map(v => v.toLowerCase());
+                    const has4K = variants.includes("4k") || variants.includes("uhd") || pkg.name.toLowerCase().includes("4k");
+                    const hasHD = variants.includes("hd") || pkg.name.toLowerCase().includes("hd") || (!has4K && variants.length === 0);
+                    const is4KAvailable = (variants.length === 0) ? true : has4K;
+                    const isHDAvailable = (variants.length === 0) ? true : hasHD;
 
                     // Resolution filtering
                     let matchesResolution = true;
                     if (this.filterResolution === "4k") {
-                        matchesResolution = is4K;
+                        matchesResolution = is4KAvailable;
                     } else if (this.filterResolution === "hd") {
-                        matchesResolution = isHD;
+                        matchesResolution = isHDAvailable;
                     }
                     if (!matchesResolution) continue;
 
@@ -552,7 +554,7 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
                         key: key,
                         name: data.name,
                         properties: props,
-                        is4K: is4K,
+                        is4K: this.filterResolution === "4k",
                         isOwned: pkg.isOwned,
                         packageId: pkg.id
                     });
@@ -562,9 +564,9 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
             this.filteredMaps = compiledMapsList;
             this.filteredMaps.sort((a, b) => a.name.localeCompare(b.name));
 
-            // 2. Second, compile filteredPackages (Moulinette packages)
+            // 2. Second, compile filteredPackages (Map Packs)
             this.filteredPackages = this.packages.filter(pkg => {
-                const nameLower = pkg.name.toLowerCase();
+                const nameLower = (pkg.name || "").toLowerCase();
                 
                 // 1. Text Search matching
                 const matchesSearch = nameLower.includes(this.searchQuery.toLowerCase());
@@ -580,13 +582,17 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
                 if (!matchesSubscribed) return false;
 
                 // 3. Resolution Filter matching
-                const is4K = nameLower.includes("4k") || nameLower.includes("uhd") || nameLower.includes("ultra hd");
-                const isHD = !is4K;
+                const variants = (pkg.variants || []).map(v => v.toLowerCase());
+                const has4K = variants.includes("4k") || variants.includes("uhd") || nameLower.includes("4k") || nameLower.includes("uhd");
+                const hasHD = variants.includes("hd") || nameLower.includes("hd") || (!has4K && variants.length === 0);
+                const is4KAvailable = (variants.length === 0) ? true : has4K;
+                const isHDAvailable = (variants.length === 0) ? true : hasHD;
+
                 let matchesResolution = true;
                 if (this.filterResolution === "4k") {
-                    matchesResolution = is4K;
+                    matchesResolution = is4KAvailable;
                 } else if (this.filterResolution === "hd") {
-                    matchesResolution = isHD;
+                    matchesResolution = isHDAvailable;
                 }
                 if (!matchesResolution) return false;
 
@@ -2288,7 +2294,7 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
         }
 
         buildPackCardHTML(pkg) {
-            const is4K = pkg.name.toLowerCase().includes("4k") || pkg.name.toLowerCase().includes("uhd") || pkg.name.toLowerCase().includes("ultra hd");
+            const is4K = this.filterResolution === "4k";
             const resClass = is4K ? 'res-4k' : 'res-hd';
             const resLabel = is4K ? '4K' : 'HD';
             const premiumThumb = this.getThumbnailForPackage(pkg);
