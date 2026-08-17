@@ -92,7 +92,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
     icon: "fa-solid fa-boxes-stacked",
     button: true,
     visible: true,
-    onClick: () => {
+    onChange: () => {
       new JenneAssetManagerApp().render({ force: true });
     }
   };
@@ -105,7 +105,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
     icon: "fas fa-dragon",
     button: true,
     visible: true,
-    onClick: () => {
+    onChange: () => {
       new JenneDDBPatchApp().render({ force: true });
     }
   };
@@ -118,7 +118,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
     icon: "fas fa-palette",
     button: true,
     visible: true,
-    onClick: () => {
+    onChange: () => {
       // Check if module is active
       if (!game.modules.get('jenne-auto-color')?.active) {
         return ui.notifications.error("The 'Jenne Auto Color' module must be active to configure it.");
