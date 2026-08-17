@@ -55,7 +55,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
     jenneSuite = {
       name: "jenne-suite",
       title: "Jenne Suite",
-      icon: "fas fa-gem",
+      icon: "jenne-gothic-j-icon",
       layer: "jenneSuite",
       visible: true,
       tools: isArray ? [] : {}
@@ -89,7 +89,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
   const tool = {
     name: "jenne-asset-manager",
     title: "Jenne Asset Manager",
-    icon: "fas fa-images",
+    icon: "jenne-custom-icon",
     button: true,
     visible: true,
     onClick: () => {
@@ -102,7 +102,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
   const batchTool = {
     name: "beneos-batch-importer",
     title: "Beneos Batch Importer",
-    icon: "fas fa-file-import",
+    icon: "jenne-batch-importer-icon",
     button: true,
     visible: true,
     onClick: () => {
@@ -124,7 +124,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
   const ddbTool = {
     name: "ddb-patcher",
     title: "Patch D&D Beyond Importer",
-    icon: "fab fa-d-and-d",
+    icon: "fas fa-dragon",
     button: true,
     visible: true,
     onClick: () => {

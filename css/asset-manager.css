@@ -1,5 +1,52 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap');
 
+/* ==========================================================================
+   Custom Jenne Suite Embedded Vector Icons
+   ========================================================================== */
+#controls .scene-control i.jenne-gothic-j-icon,
+#controls .control-tool i.jenne-gothic-j-icon,
+#controls .control-tool i.jenne-custom-icon,
+#controls .control-tool i.jenne-batch-importer-icon,
+i.jenne-gothic-j-icon,
+i.jenne-custom-icon,
+i.jenne-batch-importer-icon {
+  display: inline-block !important;
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px !important;
+  min-height: 22px !important;
+  vertical-align: middle !important;
+  background-position: center !important;
+  background-repeat: no-repeat !important;
+  background-size: contain !important;
+}
+
+#controls .scene-control i.jenne-gothic-j-icon:before,
+#controls .control-tool i.jenne-gothic-j-icon:before,
+#controls .control-tool i.jenne-custom-icon:before,
+#controls .control-tool i.jenne-batch-importer-icon:before,
+i.jenne-gothic-j-icon:before,
+i.jenne-custom-icon:before,
+i.jenne-batch-importer-icon:before {
+  content: "" !important;
+  display: none !important;
+}
+
+#controls i.jenne-gothic-j-icon,
+i.jenne-gothic-j-icon {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><g transform="translate(256, 256) scale(2.0) translate(-256, -332)"><path d="M 260 250 C 237 250, 220 262, 220 277 C 220 288, 228 297, 239 301 C 247 299, 249 288, 245 283 C 239 278, 242 269, 257 269 L 291 269 L 291 365 C 291 400, 270 432, 222 432 C 200 432, 183 422, 183 411 C 183 401, 193 393, 202 397 C 209 403, 209 414, 223 414 C 242 414, 256 395, 256 368 L 256 269 L 315 269 L 329 250 L 293 250 L 280 233 L 267 250 Z" fill="%23f0d486"/></g></svg>') !important;
+}
+
+#controls i.jenne-custom-icon,
+i.jenne-custom-icon {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M 180 180 C 140 140, 100 90, 140 40 C 180 30, 220 90, 256 110 C 292 90, 332 30, 372 40 C 412 90, 372 140, 332 180 C 412 220, 452 320, 452 400 C 452 470, 372 480, 256 480 C 140 480, 60 470, 60 400 C 60 320, 100 220, 180 180 Z" fill="%23f0d486" opacity="0.45"/><path d="M 160 175 C 200 195, 312 195, 352 175 C 352 195, 340 210, 330 215 C 290 200, 222 200, 182 215 C 172 210, 160 195, 160 175 Z" fill="%23f0d486"/><path d="M 256 185 C 270 185, 275 200, 256 215 C 237 200, 242 185, 256 185 Z" fill="%23f0d486"/><path d="M 245 205 C 235 230, 225 260, 235 285 C 245 285, 250 270, 250 245 C 250 225, 252 215, 250 205 Z" fill="%23f0d486"/><path d="M 267 205 C 277 230, 287 260, 277 285 C 267 285, 262 270, 262 245 C 262 225, 260 215, 262 205 Z" fill="%23f0d486"/><path d="M 260 250 C 237 250, 220 262, 220 277 C 220 288, 228 297, 239 301 C 247 299, 249 288, 245 283 C 239 278, 242 269, 257 269 L 291 269 L 291 365 C 291 400, 270 432, 222 432 C 200 432, 183 422, 183 411 C 183 401, 193 393, 202 397 C 209 403, 209 414, 223 414 C 242 414, 256 395, 256 368 L 256 269 L 315 269 L 329 250 L 293 250 L 280 233 L 267 250 Z" fill="%23f0d486"/></svg>') !important;
+}
+
+#controls i.jenne-batch-importer-icon,
+i.jenne-batch-importer-icon {
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M 70 150 L 190 100 L 190 410 L 70 460 Z" fill="%23f0d486" opacity="0.45"/><path d="M 190 100 L 320 150 L 320 460 L 190 410 Z" fill="%23f0d486" opacity="0.25"/><path d="M 320 150 L 442 100 L 442 410 L 320 460 Z" fill="%23f0d486" opacity="0.45"/><g transform="translate(256, 260) scale(1.6) translate(-256, -332)"><path d="M 260 250 C 237 250, 220 262, 220 277 C 220 288, 228 297, 239 301 C 247 299, 249 288, 245 283 C 239 278, 242 269, 257 269 L 291 269 L 291 365 C 291 400, 270 432, 222 432 C 200 432, 183 422, 183 411 C 183 401, 193 393, 202 397 C 209 403, 209 414, 223 414 C 242 414, 256 395, 256 368 L 256 269 L 315 269 L 329 250 L 293 250 L 280 233 L 267 250 Z" fill="%23f0d486"/></g></svg>') !important;
+}
+
 /* Jenne Asset Manager - Sleek Modern Dark Mode with Beneos Gold/Mahogany Palette */
 
 .jenne-asset-manager {

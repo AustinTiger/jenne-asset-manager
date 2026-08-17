@@ -4402,66 +4402,8 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
 // Assign to globalThis so external hooks/modules can instantiate it
 globalThis.BeneosBatchImporterApp = BeneosBatchImporterApp;
 
-// Self-patcher to dynamically inject the auto-resume hook into beneos-module if missing
-async function checkAndPatchBeneosModule() {
-    if (!game.user?.isGM) return;
-    try {
-        const response = await fetch('/modules/beneos-module/scripts/beneos_module.js');
-        if (!response.ok) return;
-        let code = await response.text();
-        if (code.includes("BENEOS BATCH-IMPORTER DYNAMIC AUTO-RESUME")) {
-            console.log("Jenne Asset Manager | beneos-module is already patched with the Batch Importer hook.");
-            return;
-        }
+// Auto-resume fallback (directly executed on load)
 
-        console.log("Jenne Asset Manager | Patching beneos-module with the Batch Importer auto-resume hook...");
-        
-        const targetPattern = 'Hooks.once("ready", () => {';
-        if (!code.includes(targetPattern)) {
-            console.warn("Jenne Asset Manager | Could not find Hooks.once('ready') in beneos_module.js to patch.");
-            return;
-        }
-
-        const patchCode = `
-  // =================================================================================
-  // BENEOS BATCH-IMPORTER DYNAMIC AUTO-RESUME
-  // =================================================================================
-  try {
-    if (game.user.isGM && sessionStorage.getItem("beneos-batch-importer-resume-state")) {
-      console.log("Beneos | Active Batch Importer session detected in sessionStorage. Loading app to resume automatically...");
-      setTimeout(() => {
-        if (globalThis.BeneosBatchImporterApp) {
-          const app = new globalThis.BeneosBatchImporterApp();
-          app.render({ force: true });
-        }
-      }, 5000);
-    }
-  } catch (e) {
-    console.error("Beneos | Error auto-resuming batch importer:", e);
-  }
-  // =================================================================================
-`;
-        
-        const insertionPoint = code.indexOf(targetPattern) + targetPattern.length;
-        const patchedCode = code.slice(0, insertionPoint) + patchCode + code.slice(insertionPoint);
-
-        const file = new File([patchedCode], "beneos_module.js", { type: "application/javascript" });
-        const FilePickerClass = globalThis.foundry?.applications?.apps?.FilePicker || globalThis.FilePicker;
-        await FilePickerClass.upload("data", "modules/beneos-module/scripts", file, {}, { notify: false });
-        console.log("Jenne Asset Manager | Successfully patched beneos-module with Batch Importer hook.");
-    } catch (err) {
-        console.error("Jenne Asset Manager | Failed to patch beneos-module:", err);
-    }
-}
-
-// Check and patch on game ready
-if (game.ready) {
-    checkAndPatchBeneosModule();
-} else {
-    Hooks.once("ready", () => checkAndPatchBeneosModule());
-}
-
-// Dual-layered V8 Auto-resume fallback (directly executed on load)
 if (game.user?.isGM && sessionStorage.getItem("beneos-batch-importer-resume-state")) {
     const startResume = () => {
         console.log("Jenne Asset Manager | Active Batch Importer session detected in sessionStorage on load. Auto-resuming...");
