@@ -1,50 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500;600&display=swap');
 
-/* ==========================================================================
-   Custom Jenne Suite Embedded Base64 Vector Icons
-   ========================================================================== */
-#controls .scene-control i.jenne-gothic-j-icon,
-#controls .control-tool i.jenne-gothic-j-icon,
-#controls .control-tool i.jenne-custom-icon,
-#controls li[data-control="jenne-suite"] > i,
-#controls li[data-tool="jenne-asset-manager"] > i,
-i.jenne-gothic-j-icon,
-i.jenne-custom-icon {
-  display: inline-block !important;
-  width: 24px !important;
-  height: 24px !important;
-  min-width: 24px !important;
-  min-height: 24px !important;
-  margin: 0 auto !important;
-  background-position: center !important;
-  background-repeat: no-repeat !important;
-  background-size: contain !important;
-  vertical-align: middle !important;
-}
-
-#controls .scene-control i.jenne-gothic-j-icon::before,
-#controls .control-tool i.jenne-gothic-j-icon::before,
-#controls .control-tool i.jenne-custom-icon::before,
-#controls li[data-control="jenne-suite"] > i::before,
-#controls li[data-tool="jenne-asset-manager"] > i::before,
-i.jenne-gothic-j-icon::before,
-i.jenne-custom-icon::before {
-  content: "" !important;
-  display: none !important;
-}
-
-#controls .scene-control i.jenne-gothic-j-icon,
-#controls li[data-control="jenne-suite"] > i,
-i.jenne-gothic-j-icon {
-  background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48ZyB0cmFuc2Zvcm09InRyYW5zbGF0ZSgyNTYsIDI1Nikgc2NhbGUoMi4wKSB0cmFuc2xhdGUoLTI1NiwgLTMzMikiPjxwYXRoIGQ9Ik0gMjYwIDI1MCBDIDIzNyAyNTAsIDIyMCAyNjIsIDIyMCAyNzcgQyAyMjAgMjg4LCAyMjggMjk3LCAyMzkgMzAxIEMgMjQ3IDI5OSwgMjQ5IDI4OCwgMjQ1IDI4MyBDIDIzOSAyNzgsIDI0MiAyNjksIDI1NyAyNjkgTCAyOTEgMjY5IEwgMjkxIDM2NSBDIDI5MSA0MDAsIDI3MCA0MzIsIDIyMiA0MzIgQyAyMDAgNDMyLCAxODMgNDIyLCAxODMgNDExIEMgMTgzIDQwMSwgMTkzIDM5MywgMjAyIDM5NyBDIDIwOSA0MDMsIDIwOSA0MTQsIDIyMyA0MTQgQyAyNDIgNDE0LCAyNTYgMzk1LCAyNTYgMzY4IEwgMjU2IDI2OSBMIDMxNSAyNjkgTCAzMjkgMjUwIEwgMjkzIDI1MCBMIDI4MCAyMzMgTCAyNjcgMjUwIFoiIGZpbGw9IiNmMGQ0ODYiLz48L2c+PC9zdmc+') !important;
-}
-
-#controls .control-tool i.jenne-custom-icon,
-#controls li[data-tool="jenne-asset-manager"] > i,
-i.jenne-custom-icon {
-  background-image: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBkPSJNIDE4MCAxODAgQyAxNDAgMTQwLCAxMDAgOTAsIDE0MCA0MCBDIDE4MCAzMCwgMjIwIDkwLCAyNTYgMTEwIEMgMjkyIDkwLCAzMzIgMzAsIDM3MiA0MCBDIDQxMiA5MCwgMzcyIDE0MCwgMzMyIDE4MCBDIDQxMiAyMjAsIDQ1MiAzMjAsIDQ1MiA0MDAgQyA0NTIgNDcwLCAzNzIgNDgwLCAyNTYgNDgwIEMgMTQwIDQ4MCwgNjAgNDcwLCA2MCA0MDAgQyA2MCAzMjAsIDEwMCAyMjAsIDE4MCAxODAgWiIgZmlsbD0iI2YwZDQ4NiIgb3BhY2l0eT0iMC40NSIvPjxwYXRoIGQ9Ik0gMTYwIDE3NSBDIDIwMCAxOTUsIDMxMiAxOTUsIDM1MiAxNzUgQyAzNTIgMTk1LCAzNDAgMjEwLCAzMzAgMjE1IEMgMjkwIDIwMCwgMjIyIDIwMCwgMTgyIDIxNSBDIDE3MiAyMTAsIDE2MCAxOTUsIDE2MCAxNzUgWiIgZmlsbD0iI2YwZDQ4NiIvPjxwYXRoIGQ9Ik0gMjU2IDE4NSBDIDI3MCAxODUsIDI3NSAyMDAsIDI1NiAyMTUgQyAyMzcgMjAwLCAyNDIgMTg1LCAyNTYgMTg1IFoiIGZpbGw9IiNmMGQ0ODYiLz48cGF0aCBkPSJNIDI0NSAyMDUgQyAyMzUgMjMwLCAyMjUgMjYwLCAyMzUgMjg1IEMgMjQ1IDI4NSwgMjUwIDI3MCwgMjUwIDI0NSBDIDI1MCAyMjUsIDI1MiAyMTUsIDI1MCAyMDUgWiIgZmlsbD0iI2YwZDQ4NiIvPjxwYXRoIGQ9Ik0gMjY3IDIwNSBDIDI3NyAyMzAsIDI4NyAyNjAsIDI3NyAyODUgQyAyNjcgMjg1LCAyNjIgMjcwLCAyNjIgMjQ1IEMgMjYyIDIyNSwgMjYwIDIxNSwgMjYyIDIwNSBaIiBmaWxsPSIjZjBkNDg2Ii8+PHBhdGggZD0iTSAyNjAgMjUwIEMgMjM3IDI1MCwgMjIwIDI2MiwgMjIwIDI3NyBDIDIyMCAyODgsIDIyOCAyOTcsIDIzOSAzMDEgQyAyNDcgMjk5LCAyNDkgMjg4LCAyNDUgMjgzIEMgMjM5IDI3OCwgMjQyIDI2OSwgMjU3IDI2OSBMIDI5MSAyNjkgTCAyOTEgMzY1IEMgMjkxIDQwMCwgMjcwIDQzMiwgMjIyIDQzMiBDIDIwMCA0MzIsIDE4MyA0MjIsIDE4MyA0MTEgQyAxODMgNDAxLCAxOTMgMzkzLCAyMDIgMzk3IEMgMjA5IDQwMywgMjA5IDQxNCwgMjIzIDQxNCBDIDI0MiA0MTQsIDI1NiAzOTUsIDI1NiAzNjggTCAyNTYgMjY5IEwgMzE1IDI2OSBMIDMyOSAyNTAgTCAyOTMgMjUwIEwgMjgwIDIzMyBMIDI2NyAyNTAgWiIgZmlsbD0iI2YwZDQ4NiIvPjwvc3ZnPg==') !important;
-}
-
 /* Jenne Asset Manager - Sleek Modern Dark Mode with Beneos Gold/Mahogany Palette */
 
 .jenne-asset-manager {
