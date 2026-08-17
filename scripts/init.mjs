@@ -55,7 +55,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
     jenneSuite = {
       name: "jenne-suite",
       title: "Jenne Suite",
-      icon: "jenne-gothic-j-icon",
+      icon: "fas fa-gem",
       layer: "jenneSuite",
       visible: true,
       tools: isArray ? [] : {}
@@ -83,22 +83,16 @@ Hooks.on("getSceneControlButtons", (controls) => {
     } else {
       jenneSuite.tools[tool.name] = tool;
     }
-    if (!jenneSuite.activeTool) {
-      jenneSuite.activeTool = tool.name;
-    }
   };
 
   // Define our Asset Manager tool button
   const tool = {
     name: "jenne-asset-manager",
     title: "Jenne Asset Manager",
-    icon: "jenne-custom-icon",
+    icon: "fas fa-images",
     button: true,
     visible: true,
     onClick: () => {
-      new JenneAssetManagerApp().render({ force: true });
-    },
-    onChange: () => {
       new JenneAssetManagerApp().render({ force: true });
     }
   };
@@ -108,22 +102,10 @@ Hooks.on("getSceneControlButtons", (controls) => {
   const batchTool = {
     name: "beneos-batch-importer",
     title: "Beneos Batch Importer",
-    icon: "jenne-batch-importer-icon",
+    icon: "fas fa-file-import",
     button: true,
     visible: true,
     onClick: () => {
-      if (!game.modules.get('beneos-module')?.active) {
-        return ui.notifications.error("The 'Beneos Module' must be active to run the Batch Importer.");
-      }
-      if (!game.modules.get('scene-packer')?.active) {
-        return ui.notifications.error("The 'ScenePacker' module must be active to run the Batch Importer.");
-      }
-      if (!game.modules.get('moulinette')?.active) {
-        return ui.notifications.error("The 'Moulinette Core' module must be active to run the Batch Importer.");
-      }
-      new BeneosBatchImporterApp().render({ force: true });
-    },
-    onChange: () => {
       if (!game.modules.get('beneos-module')?.active) {
         return ui.notifications.error("The 'Beneos Module' must be active to run the Batch Importer.");
       }
@@ -147,9 +129,6 @@ Hooks.on("getSceneControlButtons", (controls) => {
     visible: true,
     onClick: () => {
       new JenneDDBPatchApp().render({ force: true });
-    },
-    onChange: () => {
-      new JenneDDBPatchApp().render({ force: true });
     }
   };
   addTool(ddbTool);
@@ -162,43 +141,6 @@ Hooks.on("getSceneControlButtons", (controls) => {
     button: true,
     visible: true,
     onClick: () => {
-      // Check if module is active
-      if (!game.modules.get('jenne-auto-color')?.active) {
-        return ui.notifications.error("The 'Jenne Auto Color' module must be active to configure it.");
-      }
-
-      // Open Settings Config
-      const settingsApp = new SettingsConfig();
-      settingsApp.render(true);
-      
-      // Wait for it to render and scroll to the Jenne Auto Color settings
-      Hooks.once("renderSettingsConfig", (app, html) => {
-         const el = html.jquery ? html[0] : html;
-         
-         // Activate the modules tab if possible
-         if (app.tabs && app.tabs[0]) {
-             app.tabs[0].activate("modules");
-         } else {
-             const tabBtn = el.querySelector('a[data-tab="modules"], .item[data-tab="modules"]');
-             if (tabBtn) tabBtn.click();
-         }
-         
-         setTimeout(() => {
-             // Find a setting input for jenne-auto-color to scroll into view
-             const input = el.querySelector('[name^="jenne-auto-color."]');
-             if (input) {
-                 const container = input.closest('.form-group') || input;
-                 container.scrollIntoView({ behavior: "smooth", block: "center" });
-                 // Briefly flash the background to highlight it
-                 const originalBg = container.style.backgroundColor;
-                 container.style.transition = "background-color 0.5s ease";
-                 container.style.backgroundColor = "rgba(100, 150, 255, 0.3)";
-                 setTimeout(() => { container.style.backgroundColor = originalBg; }, 1500);
-             }
-         }, 100);
-      });
-    },
-    onChange: () => {
       // Check if module is active
       if (!game.modules.get('jenne-auto-color')?.active) {
         return ui.notifications.error("The 'Jenne Auto Color' module must be active to configure it.");
