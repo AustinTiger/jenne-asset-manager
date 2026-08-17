@@ -55,7 +55,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
     jenneSuite = {
       name: "jenne-suite",
       title: "Jenne Suite",
-      icon: "jenne-gothic-j-icon",
+      icon: "fa-solid fa-j",
       layer: "jenneSuite",
       visible: true,
       tools: isArray ? [] : {}
@@ -89,7 +89,7 @@ Hooks.on("getSceneControlButtons", (controls) => {
   const tool = {
     name: "jenne-asset-manager",
     title: "Jenne Asset Manager",
-    icon: "jenne-custom-icon",
+    icon: "fa-solid fa-boxes-stacked",
     button: true,
     visible: true,
     onClick: () => {
