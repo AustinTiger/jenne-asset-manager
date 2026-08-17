@@ -664,6 +664,7 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
                 this.compileFilterMetadata();
             }
 
+            const sessionId = game.modules.get('beneos-module')?.active ? (game.settings.get('beneos-module', 'beneos-cloud-foundry-id') || "") : "";
             const totalSelected = this.selectedPackages.size;
             const visibleSelected = Array.from(this.selectedPackages).filter(id => this.filteredPackages.some(pkg => pkg.id === id)).length;
 
