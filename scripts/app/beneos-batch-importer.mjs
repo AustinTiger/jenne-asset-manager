@@ -214,10 +214,9 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
         }
 
         /**
-         * Fetch package catalogs from Moulinette Cloud API
-         * Supports mode: "cloud-all" to build checklists and mode: "cloud-accessible" to map subscription ownership
+         * Fetch package catalogs from Beneos Cloud API and local databaseHolder
          */
-         async fetchPackages() {
+        async fetchPackages() {
             if (!game.beneos?.databaseHolder?.getAll) {
                 this.logStatus("Beneos Database not fully loaded yet. Deferring package retrieval...");
                 setTimeout(() => this.fetchPackages(), 250);
@@ -245,125 +244,89 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
                 }
             }
 
-            let loadedFromBeneos = false;
+            const isLoggedIn = (scenePacker?.sessionId && scenePacker.sessionId !== "anonymous") || (game.beneos?.cloud?.isLoggedIn?.() ?? false);
+            this.isLinked = !!isLoggedIn;
+
+            let loadedPacks = [];
+
+            // 1. Fetch releases directly from Beneos Cloud API
             if (scenePacker) {
                 try {
-                    this.logStatus("Fetching available collections directly from Beneos Cloud...");
-                    const rawPacks = await scenePacker.listPackages();
-                    if (Array.isArray(rawPacks) && rawPacks.length > 0) {
-                        const isLoggedIn = (scenePacker.sessionId && scenePacker.sessionId !== "anonymous") || (game.beneos?.cloud?.isLoggedIn?.() ?? false);
-                        this.isLinked = !!isLoggedIn;
-
-                        this.packages = rawPacks.map(pkg => {
-                            const id = pkg.id || pkg.pack_ref;
-                            return {
-                                id: id,
-                                name: pkg.name,
-                                cover_image: pkg.cover_image || pkg.img || pkg.cover || pkg.icon || "",
-                                author: pkg.creator || pkg.author || "Beneos Battlemaps",
-                                version: pkg.version || "1.0.0",
-                                system: pkg.system || game.system.id,
-                                description: pkg.description || "",
-                                isOwned: pkg.can_install !== false
-                            };
-                        });
-
-                        this.packages.sort((a, b) => a.name.localeCompare(b.name));
-                        const ownedCount = this.packages.filter(p => p.isOwned).length;
-                        this.logSuccess(`Successfully loaded ${this.packages.length} collections (${ownedCount} accessible) from Beneos Cloud.`);
-                        this.compileFilterMetadata();
-                        this.applyFilters();
-                        loadedFromBeneos = true;
+                    this.logStatus("Fetching available releases directly from Beneos Cloud...");
+                    const releases = await scenePacker.listReleases({ refresh: true });
+                    if (Array.isArray(releases) && releases.length > 0) {
+                        loadedPacks = releases.map(r => ({
+                            id: r.release_dir || r.id,
+                            name: r.display_name || r.name || r.release_dir,
+                            cover_image: r.cover_url || r.cover_image || r.img || "",
+                            author: "Beneos Battlemaps",
+                            version: "1.0.0",
+                            system: game.system.id,
+                            description: `${r.scene_count || r.nb_scenes || 0} scenes`,
+                            isOwned: r.can_install !== false,
+                            variants: r.variants_available || ["4K", "HD"],
+                            variant_dirs: r.variant_dirs || {}
+                        }));
                     }
                 } catch (err) {
-                    console.warn("Beneos Batch Importer | Direct Beneos Cloud listPackages failed, checking fallback:", err);
+                    console.warn("Beneos Batch Importer | BeneosScenePacker.listReleases failed:", err);
                 }
             }
 
-            if (loadedFromBeneos) {
-                this.isLoading = false;
-                this.render({ force: true });
-                return this.packages;
-            }
-
-            // Fallback: Moulinette Cloud if active
-            const client = game.modules.get("moulinette")?.cloudclient;
-            const mtSession = game.settings.get("moulinette", "session_ID") || "";
-            const moulinette = game.modules.get("moulinette");
-            
-            // Check active Patreon/Discord connection status
-            let mtUser = null;
-            try {
-                if (moulinette?.cloudclient?.getUser) {
-                    mtUser = await moulinette.cloudclient.getUser(true);
+            // 2. Try BeneosScenePacker.listPackages if listReleases was empty
+            if (loadedPacks.length === 0 && scenePacker) {
+                try {
+                    const rawPacks = await scenePacker.listPackages();
+                    if (Array.isArray(rawPacks) && rawPacks.length > 0) {
+                        loadedPacks = rawPacks.map(pkg => ({
+                            id: pkg.id || pkg.pack_ref,
+                            name: pkg.name,
+                            cover_image: pkg.cover_image || pkg.img || pkg.cover || pkg.icon || "",
+                            author: pkg.creator || pkg.author || "Beneos Battlemaps",
+                            version: pkg.version || "1.0.0",
+                            system: pkg.system || game.system.id,
+                            description: pkg.description || "",
+                            isOwned: pkg.can_install !== false
+                        }));
+                    }
+                } catch (err) {
+                    console.warn("Beneos Batch Importer | BeneosScenePacker.listPackages failed:", err);
                 }
-            } catch (e) {
-                console.error("Beneos Batch Importer | Error fetching user status:", e);
-            }
-            this.isLinked = !!(mtUser && mtUser.fullName && (mtUser.user_id || mtUser.discord_user_id));
-
-            if (!client || !mtSession || mtSession === "anonymous" || !this.isLinked) {
-                this.packages = [];
-                this.filteredPackages = [];
-                this.isLoading = false;
-                this.render({ force: true });
-                this.logError("Beneos Cloud session not found. Please log in to Beneos Cloud via module settings.");
-                ui.notifications.warn("Please connect your Beneos Cloud account in World Settings -> Beneos Module.");
-                return [];
             }
 
-            try {
-                this.logStatus("Fetching available collections from Moulinette Cloud (Legacy Fallback)...");
-                
-                // 1. Fetch all packages to display in catalog checklist (type: 2 = map assets)
-                const responseAll = await client.apiPOST("/packs", { 
-                    creator: "Beneos Battlemaps",
-                    type: 2, 
-                    scope: {
-                        session: mtSession,
-                        mode: "cloud-all"
+            // 3. Fallback: Local database catalog (offline resilience)
+            if (loadedPacks.length === 0) {
+                this.logStatus("Populating catalog from local Beneos database...");
+                const bmaps = game.beneos?.databaseHolder?.getAll?.("bmap") || {};
+                const releaseMap = new Map();
+                for (const [key, data] of Object.entries(bmaps)) {
+                    const props = data.properties || {};
+                    const relDir = props.release_dir || props.download_pack || key;
+                    if (!releaseMap.has(relDir)) {
+                        releaseMap.set(relDir, {
+                            id: relDir,
+                            name: props.download_pack || props.title || relDir,
+                            cover_image: data.picture || props.thumbnail || "",
+                            author: "Beneos Battlemaps",
+                            version: "1.0.0",
+                            system: game.system.id,
+                            description: "",
+                            isOwned: true
+                        });
                     }
-                });
-                const rawAllPacks = Array.isArray(responseAll) ? responseAll : (responseAll?.packs || []);
-
-                // 2. Fetch accessible (owned) packages to map active Patreon subscription tier ownership
-                const responseOwned = await client.apiPOST("/packs", { 
-                    creator: "Beneos Battlemaps",
-                    type: 2, 
-                    scope: {
-                        session: mtSession,
-                        mode: "cloud-accessible"
-                    }
-                });
-                const rawOwnedPacks = Array.isArray(responseOwned) ? responseOwned : (responseOwned?.packs || []);
-                const ownedIds = new Set(rawOwnedPacks.map(pkg => pkg.pack_ref || pkg.id));
-
-                this.packages = rawAllPacks.map(pkg => {
-                    const id = pkg.pack_ref || pkg.id;
-                    return {
-                        id: id,
-                        name: pkg.name,
-                        cover_image: pkg.cover_image || pkg.img || pkg.cover || pkg.icon || "",
-                        author: pkg.creator || "Beneos Battlemaps",
-                        version: pkg.version || "1.0.0",
-                        system: pkg.system || game.system.id,
-                        description: pkg.description || "",
-                        isOwned: ownedIds.has(id)
-                    };
-                });
-
-                this.packages.sort((a, b) => a.name.localeCompare(b.name));
-                this.logSuccess(`Successfully loaded ${this.packages.length} collections (${ownedIds.size} subscribed) from Moulinette Cloud.`);
-                this.compileFilterMetadata();
-                this.applyFilters();
-            } catch (error) {
-                console.error("Beneos Batch Importer | Catalog Fetch Error:", error);
-                this.logError(`Failed to fetch packages: ${error.message}`);
-                ui.notifications.error(`Beneos Catalog Error: ${error.message}`);
-            } finally {
-                this.isLoading = false;
-                this.render({ force: true });
+                }
+                loadedPacks = Array.from(releaseMap.values());
             }
+
+            this.packages = loadedPacks;
+            this.packages.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+            const ownedCount = this.packages.filter(p => p.isOwned).length;
+            this.logSuccess(`Successfully loaded ${this.packages.length} collections (${ownedCount} accessible) from Beneos Cloud.`);
+            this.compileFilterMetadata();
+            this.applyFilters();
+            this.isLoading = false;
+            this.render({ force: true });
+            return this.packages;
         }
 
         /**
@@ -1826,33 +1789,19 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
                             ${!this.isLinked ? `
                                 <div class="beneos-bi-auth-alert patreon-alert" style="display: flex; flex-direction: column; align-items: stretch; gap: 14px; padding: 18px; border-radius: 8px;">
                                     <div style="display: flex; align-items: flex-start; gap: 12px;">
-                                        <i class="fab fa-patreon" style="font-size: 2em; color: #ff8f95; margin-top: 2px;"></i>
+                                        <i class="fa-solid fa-cloud" style="font-size: 2em; color: #f5c992; margin-top: 2px;"></i>
                                         <div style="display: flex; flex-direction: column; gap: 4px;">
-                                            <strong style="font-size: 1.1em; color: #ff8f95;">Moulinette Account Link Required</strong>
+                                            <strong style="font-size: 1.1em; color: #f5c992;">Beneos Cloud Guest Mode</strong>
                                             <span style="color: #a59d8e; font-size: 0.95em; line-height: 1.4;">
-                                                Your Moulinette account is not linked to Patreon or Discord, or you have been logged out. Linking is required to retrieve and download your subscribed Beneos Battlemap collections.
+                                                You are browsing the battlemap catalog in guest mode. To download Patreon or subscribed releases, please connect your account in Beneos Module Settings.
                                             </span>
                                         </div>
                                     </div>
-                                    
-                                    ${this.isAuthenticating ? `
-                                        <div style="background: rgba(200, 156, 94, 0.12); border: 1px solid rgba(200, 156, 94, 0.3); color: #f5c992; padding: 12px; border-radius: 6px; display: flex; align-items: center; justify-content: space-between; font-size: 0.95em;">
-                                            <div style="display: flex; align-items: center; gap: 10px;">
-                                                <i class="fas fa-spinner fa-spin" style="color: #c89c5e; font-size: 1.1em;"></i>
-                                                <span>Awaiting authorization via ${this.authProvider === 'patreon' ? 'Patreon' : 'Discord'} window...</span>
-                                            </div>
-                                            <strong style="color: #c89c5e; font-family: monospace; font-size: 1.05em;">${this.timerSecondsLeft}s left</strong>
-                                        </div>
-                                    ` : `
-                                        <div style="display: flex; gap: 12px; margin-top: 4px;">
-                                            <button class="beneos-bi-btn-primary action-login-patreon" style="flex: 1; background: #FF424D; color: #0c0a09; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 0.95em; padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">
-                                                <i class="fab fa-patreon" style="font-size: 1.1em;"></i> Link via Patreon
-                                            </button>
-                                            <button class="beneos-bi-btn-primary action-login-discord" style="flex: 1; background: #5865F2; color: #ebe9e5; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 0.95em; padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">
-                                                <i class="fab fa-discord" style="font-size: 1.1em;"></i> Link via Discord
-                                            </button>
-                                        </div>
-                                    `}
+                                    <div style="display: flex; gap: 12px; margin-top: 4px;">
+                                        <button class="beneos-bi-btn-primary action-open-beneos-settings" style="flex: 1; background: #c89c5e; color: #0c0a09; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 0.95em; padding: 10px 16px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">
+                                            <i class="fa-solid fa-gear"></i> Open Beneos Cloud Settings
+                                        </button>
+                                    </div>
                                 </div>
                             ` : ''}
 
@@ -1976,8 +1925,8 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
                         
                         <!-- Box-style installation instruction callout (Group 2) -->
                         <div class="beneos-bi-footer-install-box" style="justify-self: center;">
-                            <div style="background: #1e1a15; border: 1px solid #4a3f35; border-radius: 6px; padding: 8px 12px; max-width: 320px; text-align: left; line-height: 1.35; font-size: 11px; color: #ebe9e5; box-shadow: 0 2px 6px rgba(0,0,0,0.4); font-family: 'Signika', sans-serif;">
-                                Beneos Battlemaps currently install from Moulinette Cloud.
+                            <div style="background: #1e1a15; border: 1px solid #4a3f35; border-radius: 6px; padding: 8px 12px; max-width: 340px; text-align: left; line-height: 1.35; font-size: 11px; color: #ebe9e5; box-shadow: 0 2px 6px rgba(0,0,0,0.4); font-family: 'Signika', sans-serif;">
+                                <i class="fa-solid fa-cloud" style="color: #c89c5e;"></i> Powered by Beneos Cloud API & Native Installer.
                             </div>
                         </div>
                         
@@ -2159,49 +2108,70 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
 
         async scanLocalDownloadedPacks() {
             this.localDownloadedFolders = { hd: new Set(), "4k": new Set() };
+            const FP = foundry?.applications?.apps?.FilePicker?.implementation ?? globalThis.FilePicker;
+            if (!FP?.browse) return;
+
+            // 1. Scan native Beneos Cloud battlemaps storage
             try {
-                // 1. Scan the top-level folders inside moulinette/adventures
-                const topLevel = await FilePicker.browse("data", "moulinette/adventures");
+                const cloudRoot = await FP.browse("data", "beneos_assets/cloud/battlemaps");
+                if (cloudRoot && cloudRoot.dirs) {
+                    for (const dir of cloudRoot.dirs) {
+                        const parts = dir.split("/");
+                        const folderName = parts[parts.length - 1];
+                        const match = folderName.match(/^(\d+)_/);
+                        const id = match ? match[1].toString() : folderName;
+                        this.localDownloadedFolders["4k"].add(id);
+                        this.localDownloadedFolders["hd"].add(id);
+                    }
+                }
+            } catch (e) {}
+
+            // 2. Scan native Beneos legacy battlemaps storage
+            try {
+                const legacyRoot = await FP.browse("data", "beneos_assets/beneos_battlemaps");
+                if (legacyRoot && legacyRoot.dirs) {
+                    for (const dir of legacyRoot.dirs) {
+                        const parts = dir.split("/");
+                        const folderName = parts[parts.length - 1];
+                        const match = folderName.match(/^(\d+)_/);
+                        const id = match ? match[1].toString() : folderName;
+                        this.localDownloadedFolders["4k"].add(id);
+                        this.localDownloadedFolders["hd"].add(id);
+                    }
+                }
+            } catch (e) {}
+
+            // 3. Scan legacy moulinette/adventures if present
+            try {
+                const topLevel = await FP.browse("data", "moulinette/adventures");
                 if (topLevel && topLevel.dirs) {
                     for (const advDir of topLevel.dirs) {
-                        // Scan for 4K packs inside this adventure folder
                         try {
-                            const res4k = await FilePicker.browse("data", `${advDir}/beneos_assets/beneos_battlemaps/4k`);
+                            const res4k = await FP.browse("data", `${advDir}/beneos_assets/beneos_battlemaps/4k`);
                             if (res4k && res4k.dirs) {
                                 for (const dir of res4k.dirs) {
                                     const parts = dir.split("/");
                                     const folderName = parts[parts.length - 1];
                                     const match = folderName.match(/^(\d+)_/);
-                                    if (match) {
-                                        this.localDownloadedFolders["4k"].add(match[1].toString());
-                                    }
+                                    if (match) this.localDownloadedFolders["4k"].add(match[1].toString());
                                 }
                             }
-                        } catch (e) {
-                            // Suppress warning if this folder doesn't contain a 4K subfolder
-                        }
+                        } catch (e) {}
 
-                        // Scan for HD packs inside this adventure folder
                         try {
-                            const resHD = await FilePicker.browse("data", `${advDir}/beneos_assets/beneos_battlemaps/hd`);
+                            const resHD = await FP.browse("data", `${advDir}/beneos_assets/beneos_battlemaps/hd`);
                             if (resHD && resHD.dirs) {
                                 for (const dir of resHD.dirs) {
                                     const parts = dir.split("/");
                                     const folderName = parts[parts.length - 1];
                                     const match = folderName.match(/^(\d+)_/);
-                                    if (match) {
-                                        this.localDownloadedFolders["hd"].add(match[1].toString());
-                                    }
+                                    if (match) this.localDownloadedFolders["hd"].add(match[1].toString());
                                 }
                             }
-                        } catch (e) {
-                            // Suppress warning if this folder doesn't contain an HD subfolder
-                        }
+                        } catch (e) {}
                     }
                 }
-            } catch (e) {
-                console.warn("Beneos Batch Importer | Local adventures folder scan skipped or failed:", e);
-            }
+            } catch (e) {}
         }
 
         getConstituentMapNames(pkgId, pkgName) {
@@ -3023,17 +2993,9 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
                 this.showHelpDialog();
             });
 
-            // Open Moulinette config UI button
-            html.on('click', '.action-link-moulinette', () => {
-                game.modules.get("moulinette")?.user?.render(true);
-            });
-
-            // Patreon/Discord logins
-            html.on('click', '.action-login-patreon', () => {
-                this.startOauth('patreon');
-            });
-            html.on('click', '.action-login-discord', () => {
-                this.startOauth('discord');
+            // Open Beneos Cloud config UI button
+            html.on('click', '.action-open-beneos-settings, .action-link-beneos', () => {
+                this.openBeneosCloudSettings();
             });
 
             // Retry Connection button
@@ -3073,8 +3035,8 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
                 list.append(`
                     <div class="beneos-bi-empty" style="padding: 60px 40px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; min-height: 200px;">
                         <i class="fas fa-spinner fa-spin" style="font-size: 2.5em; color: #c89c5e;"></i>
-                        <div style="font-size: 14px; font-weight: bold; color: #ebe9e5;">Connecting to Moulinette Cloud...</div>
-                        <div style="font-size: 11px; color: #a59d8e; text-align: center; max-width: 320px;">Fetching available battlemap collections and subscription tiers. Please wait.</div>
+                        <div style="font-size: 14px; font-weight: bold; color: #ebe9e5;">Connecting to Beneos Cloud...</div>
+                        <div style="font-size: 11px; color: #a59d8e; text-align: center; max-width: 320px;">Fetching available battlemap releases and local database. Please wait.</div>
                     </div>
                 `);
                 return;
@@ -3243,76 +3205,15 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
         /**
          * Direct OAuth authorization flow
          */
-        async startOauth(provider) {
-            if (this.isAuthenticating) return;
-
-            const state = foundry.utils.randomID(26);
-            let url = "";
-
-            if (provider === "patreon") {
-                const el = "K3ofcL8XyaObRrO_5VPuzXEPnOVCIW3fbLIt6Vygt_YIM6IKxA404ZQ0pZbZ0VkB";
-                url = `https://www.patreon.com/oauth2/authorize?response_type=code&client_id=${el}&redirect_uri=https://assets.moulinette.cloud/patreon/callback&scope=identity identity.memberships&state=${state}`;
+        openBeneosCloudSettings() {
+            if (globalThis.BeneosCloudWindowV2) {
+                new globalThis.BeneosCloudWindowV2().render({ force: true });
+            } else if (game.beneos?.cloud) {
+                const settingsApp = new SettingsConfig();
+                settingsApp.render(true);
             } else {
-                const tl = "1104472072853405706";
-                url = `https://discord.com/oauth2/authorize?response_type=code&client_id=${tl}&scope=identify guilds guilds.members.read&redirect_uri=https://assets.moulinette.cloud/discord/callback&state=${state}`;
+                ui.notifications.info("Configure your Beneos Foundry ID in Configure Settings -> Module Settings -> Beneos Module.");
             }
-
-            this.logStatus(`Opening OAuth window for Moulinette ${provider === 'patreon' ? 'Patreon' : 'Discord'} sign in...`);
-            
-            // Set Moulinette temporary session settings
-            await game.settings.set("moulinette", "session_ID", state);
-            
-            // Open window
-            window.open(url, "_blank");
-
-            // Update app auth states
-            this.isAuthenticating = true;
-            this.authProvider = provider;
-            this.timerSecondsLeft = 120;
-            this.render({ force: true });
-
-            // Setup polling timer
-            if (this.authTimer) clearInterval(this.authTimer);
-            
-            this.authTimer = setInterval(async () => {
-                this.timerSecondsLeft -= 2;
-                
-                let authenticated = false;
-                try {
-                    const client = game.modules.get("moulinette")?.cloudclient;
-                    if (client?.isUserAuthenticated) {
-                        authenticated = await client.isUserAuthenticated(state, provider);
-                    }
-                } catch (e) {
-                    console.error("Beneos Batch Importer | Error checking auth status:", e);
-                }
-
-                if (authenticated || this.timerSecondsLeft <= 0) {
-                    clearInterval(this.authTimer);
-                    this.authTimer = null;
-                    this.isAuthenticating = false;
-                    
-                    // Clear Moulinette cache
-                    game.modules.get("moulinette")?.cache?.clearCache();
-                    
-                    if (authenticated) {
-                        this.logSuccess("Successfully authenticated Moulinette account!");
-                        ui.notifications.info("Moulinette account authenticated successfully!");
-                    } else {
-                        this.logError("Authentication timed out or failed.");
-                        ui.notifications.error("Moulinette authentication timed out.");
-                    }
-                    
-                    // Re-fetch packages (which will update the permanent session ID in Settings)
-                    await this.fetchPackages();
-                } else {
-                    // Update only the seconds count inside the DOM to avoid re-rendering entire window
-                    const timerEl = $('.beneos-bi-auth-alert strong');
-                    if (timerEl.length) {
-                        timerEl.text(`${this.timerSecondsLeft} seconds left`);
-                    }
-                }
-            }, 2000);
         }
 
         // Cleaned up duplicate refreshList and updateImportButton methods to prevent prototype override
