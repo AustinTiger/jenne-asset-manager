@@ -33,7 +33,7 @@ jenne-asset-manager/
 │   ├── id-generator.mjs           # Deterministic unique ID generator
 │   ├── importer.mjs               # Core document and file import engine
 │   ├── init.mjs                   # Module entry point, hooks, and sidebar tools
-│   ├── legacy-beneos-parser.mjs   # Parser for legacy Beneos metadata & maps
+│   ├── beneos-pack-installer.mjs   # Native installer bridge for Beneos Battlemaps packs
 │   ├── scanner.mjs                # Local filesystem and compendium scanner
 │   └── tracker.mjs                # Asset import history & deduplication registry
 ├── templates/                     # Handlebars UI templates
