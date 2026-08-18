@@ -14,7 +14,8 @@
         </button>
       </div>
       
-      <div class="jenne-publisher-list" style="padding: 16px; display: flex; flex-direction: column; gap: 16px;">
+      <!-- Top Section: Library & View Controls -->
+      <div class="jenne-publisher-list" style="padding: 14px 16px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto;">
         <!-- Content Source Selector -->
         <div class="toolbar-section flex-col">
           <label for="source-picker"><i class="fas fa-plug"></i> Content Source:</label>
@@ -32,7 +33,7 @@
 
         <!-- Columns count selector -->
         <div class="toolbar-section flex-col">
-          <label for="column-picker"><i class="fas fa-th"></i> Preview Layout:</label>
+          <label for="column-picker"><i class="fas fa-th"></i> Grid Layout:</label>
           <select class="jenne-compendium-select" id="column-picker" style="width: 100%;">
             {{#each columnOptions}}
               <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
@@ -40,41 +41,30 @@
           </select>
         </div>
 
-        <!-- Target Compendium Selection -->
-        <div class="toolbar-section flex-col">
-          <label for="compendium-target"><i class="fas fa-database"></i> Target Compendium:</label>
-          <select class="jenne-compendium-select" id="compendium-target" style="width: 100%;">
-            <option value="">-- Choose Target Pack --</option>
-            {{#each compendiums}}
-              <option value="{{id}}" {{#if selected}}selected{{/if}}>{{label}}</option>
-            {{/each}}
-          </select>
-        </div>
-        
-        <!-- Subfolder input -->
-        <div class="toolbar-section flex-col">
-          <label for="folder-target"><i class="fas fa-folder-plus"></i> Subfolder (Optional):</label>
-          <input type="text" class="jenne-folder-input" id="folder-target" placeholder="e.g. Monsters/Goblins" value="{{subfolder}}" style="width: 100%;">
-        </div>
+        <!-- Module Tools & Library Actions -->
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 2px; padding-top: 10px; border-top: 1px solid rgba(212, 168, 87, 0.12);">
+          <!-- Catalog Scan / Refresh -->
+          <button class="jenne-btn btn-secondary" data-action="scan" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; height: 32px; font-size: 11.5px;">
+            <i class="fas fa-sync-alt"></i> Re-Scan Library
+          </button>
 
-        <!-- Catalog Scan / Refresh -->
-        <button class="jenne-btn btn-secondary" data-action="scan" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px;">
-          <i class="fas fa-sync-alt"></i> Re-Scan Library
-        </button>
-
-        <!-- Beneos Batch Importer -->
-        <button class="jenne-btn btn-secondary" data-action="openBeneosImporter" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px;">
-          <i class="fas fa-file-import"></i> Beneos Importer
-        </button>
+          <!-- Beneos Batch Importer -->
+          <button class="jenne-btn btn-secondary" data-action="openBeneosImporter" style="width: 100%; display: flex; justify-content: center; align-items: center; gap: 8px; height: 32px; font-size: 11.5px;">
+            <i class="fas fa-file-import"></i> Beneos Importer
+          </button>
+        </div>
       </div>
 
-      <!-- Action Control at the bottom of the left sidebar -->
-      <div class="jenne-batch-action-panel" style="padding: 14px; border-top: 1px solid var(--border-color); margin-top: auto; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.15);">
-        <label for="jenne-batch-action-select" style="font-size: 11px; color: var(--text-muted); font-family: 'Cinzel', serif; display: flex; align-items: center; gap: 6px;">
-          <i class="fas fa-bolt" style="color: var(--text-active);"></i> Action for Selected:
-        </label>
+      <!-- Action Panel at the bottom of the left sidebar (Context-Aware) -->
+      <div class="jenne-batch-action-panel">
+        <div class="batch-action-header">
+          <label for="jenne-batch-action-select" class="batch-action-label">
+            <i class="fas fa-bolt"></i> Batch Action:
+          </label>
+        </div>
         
-        <select class="jenne-compendium-select" id="jenne-batch-action-select" style="width: 100%; font-size: 11.5px; height: 32px;">
+        <!-- Action Dropdown -->
+        <select class="jenne-compendium-select" id="jenne-batch-action-select" style="width: 100%; font-size: 12px; height: 34px;">
           <option value="import-compendium" {{#if (eq selectedBatchAction "import-compendium")}}selected{{/if}}>📦 Import to Compendium</option>
           {{#if hasBeneos}}
             <option value="beneos-install" {{#if (eq selectedBatchAction "beneos-install")}}selected{{/if}}>📥 Download / Install (Beneos)</option>
@@ -83,11 +73,55 @@
           {{/if}}
         </select>
 
+        <!-- Action-Specific Options (Visible only when matching action is selected) -->
+        {{#if (eq selectedBatchAction "import-compendium")}}
+          <div class="jenne-action-specific-options">
+            <!-- Target Compendium Selection -->
+            <div class="toolbar-section flex-col">
+              <label for="compendium-target" style="font-size: 10.5px;"><i class="fas fa-database"></i> Target Compendium:</label>
+              <select class="jenne-compendium-select" id="compendium-target" style="width: 100%; font-size: 11.5px; height: 30px;">
+                <option value="">-- Choose Target Pack --</option>
+                {{#each compendiums}}
+                  <option value="{{id}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+                {{/each}}
+              </select>
+            </div>
+            
+            <!-- Subfolder input -->
+            <div class="toolbar-section flex-col">
+              <label for="folder-target" style="font-size: 10.5px;"><i class="fas fa-folder-plus"></i> Subfolder (Optional):</label>
+              <input type="text" class="jenne-folder-input" id="folder-target" placeholder="e.g. Monsters/Goblins" value="{{subfolder}}" style="width: 100%; font-size: 11.5px; height: 30px;">
+            </div>
+          </div>
+        {{else if (eq selectedBatchAction "beneos-install")}}
+          <div class="jenne-action-specific-options">
+            <div class="action-info-box">
+              <i class="fas fa-info-circle"></i>
+              <span>Downloads and installs selected creature tokens and actor documents.</span>
+            </div>
+          </div>
+        {{else if (eq selectedBatchAction "beneos-update")}}
+          <div class="jenne-action-specific-options">
+            <div class="action-info-box">
+              <i class="fas fa-sync"></i>
+              <span>Re-imports and updates selected creatures to the latest cloud version.</span>
+            </div>
+          </div>
+        {{else if (eq selectedBatchAction "beneos-uninstall")}}
+          <div class="jenne-action-specific-options">
+            <div class="action-warning-box">
+              <i class="fas fa-exclamation-triangle"></i>
+              <span>Permanently deletes world Actor documents for selected creatures.</span>
+            </div>
+          </div>
+        {{/if}}
+
+        <!-- Primary Execute Button -->
         <button class="jenne-btn btn-primary {{#unless anySelected}}disabled{{/unless}}" 
                 data-action="triggerBatchAction" 
                 {{#unless anySelected}}disabled{{/unless}} 
-                style="width: 100%; height: 38px; display: flex; justify-content: center; align-items: center; gap: 8px; font-weight: bold; font-size: 12.5px;">
-          <i class="fas fa-play"></i> Execute ({{selectedCount}})
+                style="width: 100%; height: 38px; display: flex; justify-content: center; align-items: center; gap: 8px; font-weight: bold; font-size: 12.5px; margin-top: 2px;">
+          <i class="fas fa-play"></i> Execute Action ({{selectedCount}})
         </button>
       </div>
     </aside>

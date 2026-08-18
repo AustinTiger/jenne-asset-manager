@@ -389,6 +389,7 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       batchActionSelect.value = this._selectedBatchAction || "import-compendium";
       batchActionSelect.addEventListener("change", (ev) => {
         this._selectedBatchAction = ev.target.value;
+        this.render({ parts: ["main"] });
       });
     }
 
