@@ -54,7 +54,9 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       closePreview: JenneAssetManagerApp._onClosePreview,
       playAudio: JenneAssetManagerApp._onPlayAudio,
       stopAudio: JenneAssetManagerApp._onStopAudio,
-      openBeneosImporter: JenneAssetManagerApp._onOpenBeneosImporter
+      openBeneosImporter: JenneAssetManagerApp._onOpenBeneosImporter,
+      installBeneosActor: JenneAssetManagerApp._onInstallBeneosActor,
+      openBeneosActor: JenneAssetManagerApp._onOpenBeneosActor
     }
   };
 
@@ -154,39 +156,57 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       checked: this._activeTags.has(tagName)
     }));
 
-    // Collect all assets from all publishers and packs for global search
+    // Collect all assets from local publishers and external adapters
     const allAssets = [];
-    for (const publisher of this._catalog.publishers) {
-      for (const pack of publisher.packs) {
-        for (const asset of pack.assets) {
-          allAssets.push({
-            ...asset,
-            publisherName: publisher.name,
-            packName: pack.name,
-            packType: pack.type,
-            isBeneosLegacy: pack.isBeneosLegacy
-          });
+
+    // 1. Local drive assets
+    if (this._activeSource === "all" || this._activeSource === "local") {
+      for (const publisher of (this._catalog?.publishers || [])) {
+        for (const pack of publisher.packs) {
+          for (const asset of pack.assets) {
+            allAssets.push({
+              ...asset,
+              publisherName: publisher.name,
+              packName: pack.name,
+              packType: pack.type,
+              isBeneosLegacy: pack.isBeneosLegacy
+            });
+          }
         }
+      }
+    }
+
+    // 2. Beneos module assets (when on actors or mixed tab)
+    if (this._activeSource === "all" || this._activeSource === "beneos") {
+      if (BeneosAdapter.isAvailable && (tab === "actors" || tab === "mixed")) {
+        const beneosActors = await BeneosAdapter.fetchCatalog("actor");
+        allAssets.push(...beneosActors);
       }
     }
 
     // Filter assets by tab category, active tags, and search query
     const filteredAssets = allAssets.filter((asset) => {
       // 1. Tab category filter
-      const matchesTab = (tab === "mixed") || (asset.packType === tab);
+      const matchesTab = (tab === "mixed") || (asset.packType === tab) || (tab === "actors" && asset.type === "actor");
       if (!matchesTab) return false;
 
       // 2. Active tags filter
       if (this._activeTags.size > 0) {
-        const hasTag = (asset.tags || []).some(t => this._activeTags.has(t));
+        const hasTag = (asset.tags || []).some(t => this._activeTags.has(t)) ||
+                       (asset.biome && this._activeTags.has(asset.biome)) ||
+                       (asset.creatureType && this._activeTags.has(asset.creatureType));
         if (!hasTag) return false;
       }
 
-      // 3. Search query filter (matches filename or pack name)
+      // 3. Search query filter (matches name, creature type, biome, pack name)
+      const q = this._searchQuery.toLowerCase();
       const queryMatches = 
-        asset.filename.toLowerCase().includes(this._searchQuery.toLowerCase()) ||
-        asset.packName.toLowerCase().includes(this._searchQuery.toLowerCase()) ||
-        asset.publisherName.toLowerCase().includes(this._searchQuery.toLowerCase());
+        (asset.filename || "").toLowerCase().includes(q) ||
+        (asset.name || "").toLowerCase().includes(q) ||
+        (asset.creatureType || "").toLowerCase().includes(q) ||
+        (asset.biome || "").toLowerCase().includes(q) ||
+        (asset.packName || "").toLowerCase().includes(q) ||
+        (asset.publisherName || "").toLowerCase().includes(q);
 
       return queryMatches;
     });
@@ -195,7 +215,8 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
     const assetsWithSelection = filteredAssets.map((asset) => ({
       ...asset,
       selected: this._selectedAssets.has(asset.id),
-      iconClass: asset.type === "audio" ? "fa-music" : asset.type === "video" ? "fa-video" : "fa-image"
+      iconClass: asset.type === "audio" ? "fa-music" : asset.type === "video" ? "fa-video" : "fa-image",
+      isBeneosActor: asset.source === "beneos" && asset.type === "actor"
     }));
 
     // Setup select options for grid sizing (columns per row)
@@ -324,8 +345,20 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
     });
 
     // Add drag handlers for canvas drag-and-drop
-    content.querySelectorAll(".jenne-asset-card.draggable").forEach((card) => {
+    content.querySelectorAll(".jenne-asset-card.draggable, .jenne-beneos-actor-card.draggable").forEach((card) => {
       card.addEventListener("dragstart", (ev) => {
+        const tokenKey = card.dataset.tokenKey;
+        if (tokenKey) {
+          const dragData = {
+            type: "Actor",
+            tokenKey: tokenKey,
+            beneosTokenKey: tokenKey,
+            dragMode: card.dataset.dragMode || "cloud"
+          };
+          ev.dataTransfer.setData("text/plain", JSON.stringify(dragData));
+          return;
+        }
+
         const isCompendium = card.dataset.isCompendium === "true";
         if (isCompendium) {
           const dragData = {
@@ -347,7 +380,7 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
     });
 
     // Add double-click handlers for opening lightbox preview
-    content.querySelectorAll(".jenne-asset-card").forEach((card) => {
+    content.querySelectorAll(".jenne-asset-card, .jenne-beneos-actor-card").forEach((card) => {
       card.addEventListener("dblclick", (ev) => {
         ev.preventDefault();
         ev.stopPropagation();
@@ -560,5 +593,58 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
     }
     const { BeneosBatchImporterApp } = await import("./beneos-batch-importer.mjs");
     new BeneosBatchImporterApp().render({ force: true });
+  }
+
+  static async _onInstallBeneosActor(event, target) {
+    event.preventDefault();
+    event.stopPropagation();
+    const key = target.dataset.key;
+    if (!key) return;
+
+    target.disabled = true;
+    target.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
+
+    try {
+      ui.notifications.info(`Installing Beneos Creature "${key}"...`);
+      await BeneosAdapter.install({ key: key, type: "actor" }, { key: key });
+      ui.notifications.info(`Beneos Creature "${key}" installed successfully!`);
+      this.render();
+    } catch (err) {
+      console.error("Jenne Asset Manager | Error installing Beneos actor:", err);
+      ui.notifications.error(`Failed to install creature: ${err.message}`);
+      target.disabled = false;
+      target.innerHTML = `<i class="fa-solid fa-cloud-arrow-down"></i> Install`;
+    }
+  }
+
+  static async _onOpenBeneosActor(event, target) {
+    event.preventDefault();
+    event.stopPropagation();
+    const key = target.dataset.key;
+    if (!key) return;
+
+    // 1. Check in world actors
+    let actor = game.actors.find(a => 
+      a.flags?.["beneos-module"]?.key === key || 
+      a.name.toLowerCase().replace(/[^a-z0-9]/g, "") === key.toLowerCase().replace(/[^a-z0-9]/g, "")
+    );
+    if (actor) {
+      actor.sheet.render(true);
+      return;
+    }
+
+    // 2. Check in Beneos compendiums
+    const packs = game.packs.filter(p => p.metadata.type === "Actor" && (p.metadata.label.toLowerCase().includes("beneos") || p.metadata.id.includes("beneos")));
+    for (const pack of packs) {
+      const index = await pack.getIndex();
+      const entry = index.find(e => e.name.toLowerCase().replace(/[^a-z0-9]/g, "") === key.toLowerCase().replace(/[^a-z0-9]/g, ""));
+      if (entry) {
+        const doc = await pack.getDocument(entry._id);
+        doc?.sheet?.render(true);
+        return;
+      }
+    }
+
+    ui.notifications.warn(`Actor sheet for "${key}" not found in world or compendiums.`);
   }
 }

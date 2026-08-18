@@ -122,43 +122,114 @@
         {{#if assets.length}}
           <div class="jenne-asset-grid" style="grid-template-columns: repeat({{assetsPerRow}}, minmax(0, 1fr));">
             {{#each assets}}
-              <div class="jenne-asset-card draggable {{#if selected}}selected{{/if}} {{#if imported}}imported{{/if}}" 
-                   data-asset-id="{{id}}" 
-                   data-relative-path="{{relativePath}}"
-                   data-filename="{{filename}}"
-                   data-asset-type="{{type}}"
-                   data-is-compendium="{{isCompendium}}"
-                   data-uuid="{{uuid}}"
-                   data-document-name="{{documentName}}"
-                   data-action="toggleSelect">
-                   
-                <div class="card-media">
-                  <!-- Preview Eye Button Overlay (No stopPropagation inline to allow ApplicationV2 bubbling) -->
-                  <button class="card-preview-btn" data-action="openPreview" data-asset-id="{{id}}" title="Preview Asset">
-                    <i class="fas fa-search-plus"></i>
-                  </button>
+              {{#if isBeneosActor}}
+                <div class="jenne-beneos-actor-card draggable {{#if selected}}selected{{/if}} {{#if isInstalled}}installed{{/if}}"
+                     data-asset-id="{{id}}"
+                     data-token-key="{{key}}"
+                     data-drag-mode="{{dragMode}}"
+                     data-source="{{source}}"
+                     data-asset-type="actor"
+                     data-action="toggleSelect"
+                     draggable="true">
+                     
+                  <div class="beneos-actor-media">
+                    <img src="{{cover_image}}" alt="{{name}}" loading="lazy" onerror="this.src='icons/svg/mystery-man.svg';">
+                    
+                    {{#if isUpdate}}
+                      <span class="beneos-card-badge badge-update">UPDATE</span>
+                    {{else if isNew}}
+                      <span class="beneos-card-badge badge-new">NEW</span>
+                    {{/if}}
 
-                  {{#if (eq type 'image')}}
-                    <img src="{{relativePath}}" alt="{{filename}}" loading="lazy">
-                  {{else if (eq type 'video')}}
-                    <video src="{{relativePath}}" autoplay muted loop playsinline></video>
-                  {{else}}
-                    <div class="media-placeholder">
-                      <i class="fas {{iconClass}}"></i>
+                    {{#if cr}}
+                      <span class="beneos-card-badge badge-cr">CR {{cr}}</span>
+                    {{/if}}
+
+                    <button class="card-preview-btn" data-action="openPreview" data-asset-id="{{id}}" title="Preview Creature">
+                      <i class="fas fa-search-plus"></i>
+                    </button>
+                  </div>
+
+                  <div class="beneos-actor-info">
+                    <div class="beneos-actor-header">
+                      <span class="beneos-actor-name" title="{{name}}">{{name}}</span>
                     </div>
-                  {{/if}}
+
+                    <div class="beneos-actor-meta">
+                      <span class="beneos-meta-tag" title="Creature Type"><i class="fa-solid fa-dragon"></i> {{creatureType}}</span>
+                      {{#if biome}}
+                        <span class="beneos-meta-tag" title="Biome"><i class="fa-solid fa-tree"></i> {{biome}}</span>
+                      {{/if}}
+                      {{#if movement}}
+                        <span class="beneos-meta-tag" title="Movement"><i class="fa-solid fa-person-running"></i> {{movement}}</span>
+                      {{/if}}
+                    </div>
+
+                    <div class="beneos-actor-actions">
+                      {{#if isInstalled}}
+                        <span class="beneos-status-pill pill-installed" title="Installed in World / Compendium">
+                          <i class="fa-solid fa-circle-check"></i> Installed
+                        </span>
+                        {{#if isUpdate}}
+                          <button class="beneos-btn-action btn-update" data-action="installBeneosActor" data-key="{{key}}" title="Update to latest version">
+                            <i class="fa-solid fa-rotate"></i> Update
+                          </button>
+                        {{/if}}
+                        <button class="beneos-btn-action btn-open" data-action="openBeneosActor" data-key="{{key}}" title="Open Actor Sheet">
+                          <i class="fa-solid fa-up-right-from-square"></i> Open
+                        </button>
+                      {{else if isOwned}}
+                        <button class="beneos-btn-action btn-install" data-action="installBeneosActor" data-key="{{key}}" title="Download and install creature">
+                          <i class="fa-solid fa-cloud-arrow-down"></i> Install
+                        </button>
+                      {{else}}
+                        <span class="beneos-status-pill pill-locked" title="Locked (Patreon subscription required)">
+                          <i class="fa-solid fa-lock"></i> Locked
+                        </span>
+                      {{/if}}
+                    </div>
+                  </div>
+                </div>
+              {{else}}
+                <!-- Standard File / Compendium Asset Card -->
+                <div class="jenne-asset-card draggable {{#if selected}}selected{{/if}} {{#if imported}}imported{{/if}}" 
+                     data-asset-id="{{id}}" 
+                     data-relative-path="{{relativePath}}"
+                     data-filename="{{filename}}"
+                     data-asset-type="{{type}}"
+                     data-is-compendium="{{isCompendium}}"
+                     data-uuid="{{uuid}}"
+                     data-document-name="{{documentName}}"
+                     data-action="toggleSelect">
+                     
+                  <div class="card-media">
+                    <!-- Preview Eye Button Overlay (No stopPropagation inline to allow ApplicationV2 bubbling) -->
+                    <button class="card-preview-btn" data-action="openPreview" data-asset-id="{{id}}" title="Preview Asset">
+                      <i class="fas fa-search-plus"></i>
+                    </button>
+
+                    {{#if (eq type 'image')}}
+                      <img src="{{relativePath}}" alt="{{filename}}" loading="lazy">
+                    {{else if (eq type 'video')}}
+                      <video src="{{relativePath}}" autoplay muted loop playsinline></video>
+                    {{else}}
+                      <div class="media-placeholder">
+                        <i class="fas {{iconClass}}"></i>
+                      </div>
+                    {{/if}}
+                    
+                    {{#if imported}}
+                      <div class="imported-overlay" data-action="openDocument" data-document-uuid="{{importedDocumentId}}" title="Imported! Click to view sheet.">
+                        <i class="fas fa-check-circle"></i>
+                      </div>
+                    {{/if}}
+                  </div>
                   
-                  {{#if imported}}
-                    <div class="imported-overlay" data-action="openDocument" data-document-uuid="{{importedDocumentId}}" title="Imported! Click to view sheet.">
-                      <i class="fas fa-check-circle"></i>
-                    </div>
-                  {{/if}}
+                  <div class="card-info">
+                    <span class="filename" title="{{filename}}">{{filename}}</span>
+                  </div>
                 </div>
-                
-                <div class="card-info">
-                  <span class="filename" title="{{filename}}">{{filename}}</span>
-                </div>
-              </div>
+              {{/if}}
             {{/each}}
           </div>
         {{else}}

@@ -139,7 +139,7 @@ export class BeneosAdapter extends BaseSourceAdapter {
     }
 
     /**
-     * Fetches Creature Codex tokens and actors
+     * Fetches Creature Codex tokens and actors with complete metadata & status
      */
     static async _fetchCreatureCatalog(filters = {}) {
         const tokens = game.beneos?.databaseHolder?.getAll?.("token") || {};
@@ -147,20 +147,62 @@ export class BeneosAdapter extends BaseSourceAdapter {
 
         for (const [key, data] of Object.entries(tokens)) {
             const props = data.properties || {};
+            const isInstalled = !!data.isInstalled;
+            const isUpdate = !!data.isUpdate;
+            const isNew = !!data.isNew;
+            const isOwned = data.isInstallable !== false;
+            
+            // Format biome string
+            let biomes = "";
+            if (Array.isArray(props.biom)) {
+                biomes = props.biom.join(", ");
+            } else if (props.biom) {
+                biomes = String(props.biom);
+            }
+
+            // Format creature type
+            let typeStr = props.typeString || "";
+            if (!typeStr) {
+                if (Array.isArray(props.type)) typeStr = props.type.join(" / ");
+                else if (props.type) typeStr = String(props.type);
+                else typeStr = "Creature";
+            }
+
+            // Format movement
+            let movementStr = "";
+            if (props.movement) {
+                if (typeof props.movement === "object" && !Array.isArray(props.movement)) {
+                    movementStr = Object.entries(props.movement).map(([k, v]) => `${k} ${v}ft`).join(", ");
+                } else if (Array.isArray(props.movement)) {
+                    movementStr = props.movement.join(", ");
+                } else {
+                    movementStr = String(props.movement);
+                }
+            }
+
             results.push({
-                id: key,
+                id: `beneos_actor_${key}`,
                 key: key,
+                tokenKey: key,
                 name: data.name || props.title || key,
-                cover_image: data.picture || data.avatar || "",
+                filename: data.name || props.title || key,
+                cover_image: data.picture || data.avatar || "icons/svg/mystery-man.svg",
+                relativePath: data.picture || data.avatar || "icons/svg/mystery-man.svg",
                 author: "Beneos Creatures",
+                publisherName: "Beneos Module",
+                packName: "Beneos Creature Codex",
+                packType: "actors",
                 type: "actor",
                 source: "beneos",
-                cr: props.cr || "0",
-                creatureType: props.type || ["humanoid"],
-                biome: props.biom || [],
-                movement: props.movement || [],
-                isOwned: data.isInstallable !== false,
-                isInstalled: data.isInstalled ?? false,
+                cr: props.cr !== undefined ? String(props.cr) : "0",
+                creatureType: typeStr,
+                biome: biomes,
+                movement: movementStr,
+                isOwned: isOwned,
+                isInstalled: isInstalled,
+                isUpdate: isUpdate,
+                isNew: isNew,
+                dragMode: data.dragMode || (isInstalled ? "local" : "cloud"),
                 raw: data
             });
         }
