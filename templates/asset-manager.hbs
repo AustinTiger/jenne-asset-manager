@@ -139,11 +139,23 @@
           {{/each}}
         </nav>
 
-        <!-- Search, Sort and Selection controls -->
+        <!-- Search, Status, Sort and Selection controls -->
         <div class="jenne-search-row">
           <div class="jenne-search-container">
             <i class="fas fa-search" style="position: absolute; left: 12px; top: 12px; color: #a4b0be;"></i>
             <input type="text" class="jenne-search-input" placeholder="Search assets globally by name or category..." value="{{searchQuery}}">
+          </div>
+
+          <!-- Status Filter Selector -->
+          <div class="jenne-status-container" style="display: flex; align-items: center; gap: 6px;">
+            <label for="jenne-status-filter-select" style="font-size: 11px; color: var(--text-muted); white-space: nowrap; font-family: 'Cinzel', serif;">
+              <i class="fas fa-filter"></i> Status:
+            </label>
+            <select class="jenne-status-select" id="jenne-status-filter-select" style="background: var(--bg-tertiary); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 6px 10px; font-size: 12px; height: 36px;">
+              {{#each statusOptions}}
+                <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+              {{/each}}
+            </select>
           </div>
 
           <!-- Sort Selector -->

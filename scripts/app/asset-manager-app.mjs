@@ -27,6 +27,7 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
     this._activeAudio = null;     // Active playing audio node
     this._lastSelectedId = null;  // Tracking last clicked ID for shift-click selection
     this._sortBy = "name-asc";    // Default sort order ("name-asc", "name-desc", "cr-asc", "cr-desc", "status-installed", "status-updates")
+    this._statusFilter = "all";   // Status filter ("all", "installed", "cloud", "update", "new", "locked")
     this._selectedBatchAction = "import-compendium"; // Default batch action
   }
 
@@ -201,7 +202,23 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
         if (!hasTag) return false;
       }
 
-      // 3. Search query filter (matches name, creature type, biome, pack name)
+      // 3. Status filter (installed, cloud/uninstalled, update, new, locked)
+      if (this._statusFilter !== "all") {
+        const isInst = !!asset.isInstalled || !!asset.imported;
+        if (this._statusFilter === "installed") {
+          if (!isInst) return false;
+        } else if (this._statusFilter === "cloud" || this._statusFilter === "not-installed") {
+          if (isInst || asset.isOwned === false) return false;
+        } else if (this._statusFilter === "update") {
+          if (!asset.isUpdate) return false;
+        } else if (this._statusFilter === "new") {
+          if (!asset.isNew) return false;
+        } else if (this._statusFilter === "locked") {
+          if (asset.isOwned !== false) return false;
+        }
+      }
+
+      // 4. Search query filter (matches name, creature type, biome, pack name)
       const q = this._searchQuery.toLowerCase();
       const queryMatches = 
         (asset.filename || "").toLowerCase().includes(q) ||
@@ -267,6 +284,16 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       isBeneosActor: asset.source === "beneos" && asset.type === "actor"
     }));
 
+    // Setup select options for status filtering
+    const statusOptions = [
+      { value: "all", label: "Status: All", selected: this._statusFilter === "all" },
+      { value: "installed", label: "✅ Installed in World", selected: this._statusFilter === "installed" },
+      { value: "cloud", label: "☁️ Cloud (Not Installed)", selected: this._statusFilter === "cloud" },
+      { value: "update", label: "🔄 Updates Available", selected: this._statusFilter === "update" },
+      { value: "new", label: "✨ New Releases", selected: this._statusFilter === "new" },
+      { value: "locked", label: "🔒 Locked (Patreon)", selected: this._statusFilter === "locked" }
+    ];
+
     // Setup select options for sorting
     const sortOptions = [
       { value: "name-asc", label: "Name (A → Z)", selected: this._sortBy === "name-asc" },
@@ -298,6 +325,8 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       tabs: tabs,
       tagsList: tagsList,
       searchQuery: this._searchQuery,
+      statusFilter: this._statusFilter,
+      statusOptions: statusOptions,
       sortBy: this._sortBy,
       sortOptions: sortOptions,
       selectedBatchAction: this._selectedBatchAction || "import-compendium",
@@ -409,6 +438,16 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       sortSelect.value = this._sortBy || "name-asc";
       sortSelect.addEventListener("change", (ev) => {
         this._sortBy = ev.target.value;
+        this.render({ parts: ["main"] });
+      });
+    }
+
+    // Bind status filter selector
+    const statusSelect = content.querySelector("#jenne-status-filter-select");
+    if (statusSelect) {
+      statusSelect.value = this._statusFilter || "all";
+      statusSelect.addEventListener("change", (ev) => {
+        this._statusFilter = ev.target.value;
         this.render({ parts: ["main"] });
       });
     }
