@@ -164,3 +164,30 @@ Hooks.on("getSceneControlButtons", (controls) => {
   };
   addTool(autoColorTool);
 });
+
+// Hook into Actor Sheet Header Buttons to add "Beneos Artwork & Tokens" button
+Hooks.on("getActorSheetHeaderButtons", (sheet, buttons) => {
+  const actor = sheet.actor;
+  if (!actor) return;
+
+  const beneosKey = actor.getFlag?.("world", "beneos")?.tokenKey || 
+                   actor.getFlag?.("world", "beneos")?.fullId || 
+                   actor.getFlag?.("beneos-module", "key");
+  const cleanName = actor.name?.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+  const hasBeneosToken = beneosKey || 
+    game.beneos?.databaseHolder?.get?.("token", cleanName) || 
+    (cleanName && Object.keys(game.beneos?.databaseHolder?.getAll?.("token") || {}).some(k => cleanName.includes(k.toLowerCase().replace(/[^a-z0-9]/g, ""))));
+
+  if (hasBeneosToken || beneosKey) {
+    buttons.unshift({
+      label: "Beneos Artwork",
+      class: "beneos-artwork-header-btn",
+      icon: "fas fa-palette",
+      onclick: async () => {
+        const { JenneCreatureArtworkModal } = await import("./app/creature-artwork-modal.mjs");
+        JenneCreatureArtworkModal.openForActor(actor, beneosKey || cleanName);
+      }
+    });
+  }
+});

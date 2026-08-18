@@ -1,0 +1,103 @@
+<div class="jenne-creature-artwork-container">
+  <!-- Header Banner -->
+  <div class="creature-modal-header">
+    <div class="creature-header-info">
+      <h2>{{name}}</h2>
+      <div class="creature-header-tags">
+        <span class="creature-tag tag-cr">CR {{cr}}</span>
+        <span class="creature-tag">{{creatureType}}</span>
+        {{#if biome}}<span class="creature-tag"><i class="fas fa-tree"></i> {{biome}}</span>{{/if}}
+        {{#if movement}}<span class="creature-tag"><i class="fas fa-person-running"></i> {{movement}}</span>{{/if}}
+        {{#if isInstalled}}
+          <span class="creature-tag tag-installed"><i class="fas fa-check-circle"></i> Installed</span>
+        {{else}}
+          <span class="creature-tag tag-cloud"><i class="fas fa-cloud"></i> Beneos Cloud</span>
+        {{/if}}
+      </div>
+    </div>
+    
+    <div class="creature-header-actions">
+      {{#if isInstalled}}
+        <button class="jenne-btn btn-secondary" data-action="openSheet" style="height: 32px; font-size: 11.5px; display: flex; align-items: center; gap: 6px;">
+          <i class="fas fa-user"></i> Open Actor Sheet
+        </button>
+      {{else}}
+        <button class="jenne-btn btn-primary" data-action="installCreature" style="height: 32px; font-size: 11.5px; display: flex; align-items: center; gap: 6px;">
+          <i class="fas fa-cloud-arrow-down"></i> Install Creature
+        </button>
+      {{/if}}
+    </div>
+  </div>
+
+  <!-- Modal Tabs -->
+  <nav class="creature-modal-tabs">
+    <button class="creature-tab-btn {{#if (eq activeTab 'artwork')}}active{{/if}}" data-action="selectModalTab" data-tab="artwork">
+      <i class="fas fa-palette"></i> Artwork & Tokens ({{artworkList.length}})
+    </button>
+    <button class="creature-tab-btn {{#if (eq activeTab 'codex')}}active{{/if}}" data-action="selectModalTab" data-tab="codex">
+      <i class="fas fa-book-open"></i> Codex & Details
+    </button>
+  </nav>
+
+  <div class="creature-modal-body">
+    {{#if (eq activeTab 'artwork')}}
+      <div class="creature-artwork-grid">
+        {{#each artworkList}}
+          <div class="artwork-card">
+            <div class="artwork-preview-media">
+              {{#if isVideo}}
+                <video src="{{src}}" autoplay loop muted playsinline poster="{{thumbUrl}}"></video>
+              {{else}}
+                <img src="{{src}}" alt="{{label}}" loading="lazy" onerror="if(!this.dataset.triedBackup){this.dataset.triedBackup='1';this.src='{{backupSrc}}';}">
+              {{/if}}
+              <span class="artwork-type-badge badge-{{style}}">{{styleLabel}}</span>
+            </div>
+
+            <div class="artwork-card-details">
+              <h4>{{label}}</h4>
+              <span class="artwork-card-sub">{{description}}</span>
+
+              <div class="artwork-card-actions">
+                {{#if ../hasActor}}
+                  {{#if isToken}}
+                    <button class="artwork-btn btn-set-token" data-action="applyTokenTexture" data-src="{{src}}" data-style="{{style}}">
+                      <i class="fas fa-chess-knight"></i> Use as Token
+                    </button>
+                  {{/if}}
+                  {{#if isPortrait}}
+                    <button class="artwork-btn btn-set-portrait" data-action="applyPortrait" data-src="{{src}}">
+                      <i class="fas fa-portrait"></i> Set as Portrait
+                    </button>
+                  {{/if}}
+                {{/if}}
+                <a href="{{src}}" target="_blank" class="artwork-btn btn-view-full" title="Open full art in new tab">
+                  <i class="fas fa-external-link-alt"></i> Full Art
+                </a>
+              </div>
+            </div>
+          </div>
+        {{/each}}
+      </div>
+    {{else}}
+      <!-- Codex & Details Tab -->
+      <div class="creature-codex-details">
+        <div class="codex-portrait-pane">
+          <img src="{{portraitSrc}}" alt="{{name}}">
+        </div>
+        <div class="codex-info-pane">
+          <h3>Creature Information</h3>
+          <div class="codex-stat-row"><strong>Challenge Rating:</strong> <span>CR {{cr}}</span></div>
+          <div class="codex-stat-row"><strong>Creature Type:</strong> <span>{{creatureType}}</span></div>
+          <div class="codex-stat-row"><strong>Native Biomes:</strong> <span>{{biome}}</span></div>
+          <div class="codex-stat-row"><strong>Movement Modes:</strong> <span>{{movement}}</span></div>
+          <div class="codex-stat-row"><strong>Variants Available:</strong> <span>{{nbVariants}} variant(s)</span></div>
+          {{#if description}}
+            <div class="codex-desc-box">
+              {{{description}}}
+            </div>
+          {{/if}}
+        </div>
+      </div>
+    {{/if}}
+  </div>
+</div>

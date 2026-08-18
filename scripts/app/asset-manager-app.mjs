@@ -492,7 +492,13 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
     await ImportTracker.updateImportStatus(this._catalog);
   }
 
-  _openPreviewById(id) {
+  async _openPreviewById(id) {
+    if (id?.startsWith?.("beneos_actor_")) {
+      const key = id.replace(/^beneos_actor_/, "");
+      const { JenneCreatureArtworkModal } = await import("./creature-artwork-modal.mjs");
+      return JenneCreatureArtworkModal.openForCreature({ key });
+    }
+
     let found = null;
     if (this._catalog) {
       for (const publisher of this._catalog.publishers) {
@@ -502,6 +508,11 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
         }
         if (found) break;
       }
+    }
+
+    if (found?.type === "actor" && found?.key) {
+      const { JenneCreatureArtworkModal } = await import("./creature-artwork-modal.mjs");
+      return JenneCreatureArtworkModal.openForCreature({ key: found.key, raw: found.raw });
     }
 
     if (found) {
@@ -710,120 +721,8 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
     const key = target?.dataset?.key || target?.dataset?.tokenKey;
     if (!key) return;
 
-    // 1. Try resolving actor via official Beneos Codex resolver
-    let actor = null;
-    if (game.beneos?.codex?.resolveCodexActor) {
-      try {
-        actor = await game.beneos.codex.resolveCodexActor(key);
-      } catch (_) {}
-    }
-
-    if (!actor && game.beneos?.codex?.findActorByTokenKey) {
-      actor = game.beneos.codex.findActorByTokenKey(key);
-    }
-
-    // 2. Try world actors via Beneos world flags or clean name matching
-    if (!actor) {
-      const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");
-      actor = game.actors.find(a => {
-        const flag = a.getFlag?.("world", "beneos") || a.getFlag?.("beneos-module", "key");
-        if (flag && (flag.tokenKey === key || flag.fullId === key || flag === key)) return true;
-        const cleanName = a.name.toLowerCase().replace(/[^a-z0-9]/g, "");
-        return cleanName === cleanKey || (cleanKey.length > 4 && cleanName.includes(cleanKey));
-      });
-    }
-
-    // 3. Try resolving via Beneos Utility Drag Data helper
-    if (!actor && game.beneos?.BeneosUtility?.resolveBeneosDragData) {
-      const drag = game.beneos.BeneosUtility.resolveBeneosDragData("Actor", key);
-      if (drag?.uuid) {
-        try { actor = await fromUuid(drag.uuid); } catch (_) {}
-      }
-    }
-
-    // 4. Try all Actor Compendiums in Foundry (including world.beneos_module_actors)
-    if (!actor) {
-      const packs = game.packs.filter(p => p.metadata.type === "Actor");
-      const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");
-      for (const pack of packs) {
-        const index = await pack.getIndex();
-        const entry = index.find(e => {
-          const cleanName = e.name.toLowerCase().replace(/[^a-z0-9]/g, "");
-          return cleanName === cleanKey || (cleanKey.length > 4 && cleanName.includes(cleanKey));
-        });
-        if (entry) {
-          try {
-            actor = await pack.getDocument(entry._id);
-            if (actor) break;
-          } catch (_) {}
-        }
-      }
-    }
-
-    // If an Actor document exists, open its sheet (or Creature Codex)
-    if (actor) {
-      if (game.beneos?.codex?.openForActor) {
-        try {
-          await game.beneos.codex.openForActor(actor);
-          return;
-        } catch (err) {
-          console.warn("Jenne Asset Manager | Codex open failed, opening standard sheet:", err);
-        }
-      }
-      actor.sheet.render(true);
-      return;
-    }
-
-    // 5. If not yet installed (Cloud / Downloaded state), open Beneos Cloud / Codex preview
-    if (game.beneos?.cloudWindowV2?.render) {
-      game.beneos.cloudWindowV2.searchMode = "token";
-      game.beneos.cloudWindowV2.selectedAssetKey = key;
-      game.beneos.cloudWindowV2.render(true);
-      return;
-    }
-
-    // 6. Fallback: Show rich Creature Details Dialog with 1-click Install
-    const previewData = game.beneos?.databaseHolder?.get?.("token", key);
-    if (previewData) {
-      const props = previewData.properties || {};
-      const biomes = Array.isArray(props.biom) ? props.biom.join(", ") : (props.biom || "Any");
-      const movement = typeof props.movement === "object" ? Object.entries(props.movement).map(([k, v]) => `${k} ${v}ft`).join(", ") : (props.movement || "Standard");
-
-      new Dialog({
-        title: previewData.name || key,
-        content: `
-          <div style="font-family: 'Signika', sans-serif; padding: 10px; display: flex; flex-direction: column; align-items: center; text-align: center;">
-            <img src="${previewData.picture || previewData.avatar}" style="max-height: 220px; border-radius: 6px; border: 1px solid #d4a857; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.5);">
-            <h3 style="font-family: 'Cinzel', serif; margin: 0 0 6px 0; color: #f0ebd8;">${previewData.name}</h3>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 10px;">
-              <span style="background: rgba(212, 168, 87, 0.15); border: 1px solid #d4a857; color: #f0d486; font-size: 11px; padding: 2px 8px; border-radius: 3px; font-weight: bold;">CR ${props.cr ?? "0"}</span>
-              <span style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #a89f91; font-size: 11px; padding: 2px 8px; border-radius: 3px;">${props.typeString || "Creature"}</span>
-              <span style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #a89f91; font-size: 11px; padding: 2px 8px; border-radius: 3px;">${biomes}</span>
-            </div>
-            <p style="color: #a89f91; font-size: 0.9em; margin: 0 0 12px 0;">Movement: ${movement}</p>
-            <p style="color: #6dae11; font-size: 0.85em;">Available from Beneos Cloud. Click below to install into your world.</p>
-          </div>
-        `,
-        buttons: {
-          install: {
-            icon: '<i class="fas fa-cloud-arrow-down"></i>',
-            label: "Install Creature",
-            callback: async () => {
-              ui.notifications.info(`Installing "${previewData.name}"...`);
-              await BeneosAdapter.install({ key, type: "actor" }, { key });
-              ui.notifications.info(`Installed "${previewData.name}".`);
-            }
-          },
-          close: {
-            label: "Close"
-          }
-        },
-        default: "install"
-      }, { width: 440, classes: ["dialog", "beneos-creature-preview-dialog"] }).render(true);
-      return;
-    }
-
-    ui.notifications.warn(`Could not resolve sheet for creature "${key}".`);
+    const { JenneCreatureArtworkModal } = await import("./creature-artwork-modal.mjs");
+    return JenneCreatureArtworkModal.openForCreature({ key });
   }
 
   static async _onTriggerBatchAction(event, target) {
