@@ -89,12 +89,25 @@
           {{/each}}
         </nav>
 
-        <!-- Search and Selection controls -->
+        <!-- Search, Sort and Selection controls -->
         <div class="jenne-search-row">
           <div class="jenne-search-container">
             <i class="fas fa-search" style="position: absolute; left: 12px; top: 12px; color: #a4b0be;"></i>
             <input type="text" class="jenne-search-input" placeholder="Search assets globally by name or category..." value="{{searchQuery}}">
           </div>
+
+          <!-- Sort Selector -->
+          <div class="jenne-sort-container" style="display: flex; align-items: center; gap: 6px;">
+            <label for="jenne-sort-select" style="font-size: 11px; color: var(--text-muted); white-space: nowrap; font-family: 'Cinzel', serif;">
+              <i class="fas fa-arrow-down-short-wide"></i> Sort:
+            </label>
+            <select class="jenne-sort-select" id="jenne-sort-select" style="background: var(--bg-tertiary); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 4px; padding: 6px 10px; font-size: 12px; height: 36px;">
+              {{#each sortOptions}}
+                <option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>
+              {{/each}}
+            </select>
+          </div>
+
           <button class="jenne-btn btn-secondary" data-action="toggleSelectAll">
             <i class="fas fa-check-double"></i> Select All
           </button>

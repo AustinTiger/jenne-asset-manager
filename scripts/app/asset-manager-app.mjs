@@ -26,6 +26,7 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
     this._audioVolume = 0.5;      // Audio playback volume
     this._activeAudio = null;     // Active playing audio node
     this._lastSelectedId = null;  // Tracking last clicked ID for shift-click selection
+    this._sortBy = "name-asc";    // Default sort order ("name-asc", "name-desc", "cr-asc", "cr-desc", "status-installed", "status-updates")
   }
 
   static DEFAULT_OPTIONS = {
@@ -211,6 +212,51 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       return queryMatches;
     });
 
+    // Helper to parse fractional and numeric challenge ratings
+    const parseCrValue = (cr) => {
+      if (cr === undefined || cr === null || cr === "") return -1;
+      const str = String(cr).trim();
+      if (str.includes("/")) {
+        const [num, den] = str.split("/").map(Number);
+        if (den) return num / den;
+      }
+      const val = parseFloat(str);
+      return isNaN(val) ? -1 : val;
+    };
+
+    // Sort filtered assets according to _sortBy
+    filteredAssets.sort((a, b) => {
+      const nameA = a.name || a.filename || "";
+      const nameB = b.name || b.filename || "";
+
+      if (this._sortBy === "name-asc") {
+        return nameA.localeCompare(nameB, undefined, { numeric: true, sensitivity: "base" });
+      } else if (this._sortBy === "name-desc") {
+        return nameB.localeCompare(nameA, undefined, { numeric: true, sensitivity: "base" });
+      } else if (this._sortBy === "cr-asc") {
+        const crA = parseCrValue(a.cr);
+        const crB = parseCrValue(b.cr);
+        if (crA !== crB) return crA - crB;
+        return nameA.localeCompare(nameB);
+      } else if (this._sortBy === "cr-desc") {
+        const crA = parseCrValue(a.cr);
+        const crB = parseCrValue(b.cr);
+        if (crA !== crB) return crB - crA;
+        return nameA.localeCompare(nameB);
+      } else if (this._sortBy === "status-installed") {
+        const instA = a.isInstalled ? 1 : 0;
+        const instB = b.isInstalled ? 1 : 0;
+        if (instA !== instB) return instB - instA;
+        return nameA.localeCompare(nameB);
+      } else if (this._sortBy === "status-updates") {
+        const scoreA = a.isUpdate ? 2 : a.isNew ? 1 : 0;
+        const scoreB = b.isUpdate ? 2 : b.isNew ? 1 : 0;
+        if (scoreA !== scoreB) return scoreB - scoreA;
+        return nameA.localeCompare(nameB);
+      }
+      return 0;
+    });
+
     // Attach selected state to rendering context
     const assetsWithSelection = filteredAssets.map((asset) => ({
       ...asset,
@@ -218,6 +264,16 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       iconClass: asset.type === "audio" ? "fa-music" : asset.type === "video" ? "fa-video" : "fa-image",
       isBeneosActor: asset.source === "beneos" && asset.type === "actor"
     }));
+
+    // Setup select options for sorting
+    const sortOptions = [
+      { value: "name-asc", label: "Name (A → Z)", selected: this._sortBy === "name-asc" },
+      { value: "name-desc", label: "Name (Z → A)", selected: this._sortBy === "name-desc" },
+      { value: "cr-asc", label: "CR (Low → High)", selected: this._sortBy === "cr-asc" },
+      { value: "cr-desc", label: "CR (High → Low)", selected: this._sortBy === "cr-desc" },
+      { value: "status-installed", label: "Installed First", selected: this._sortBy === "status-installed" },
+      { value: "status-updates", label: "Updates & New First", selected: this._sortBy === "status-updates" }
+    ];
 
     // Setup select options for grid sizing (columns per row)
     const columnOptions = [
@@ -240,6 +296,8 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       tabs: tabs,
       tagsList: tagsList,
       searchQuery: this._searchQuery,
+      sortBy: this._sortBy,
+      sortOptions: sortOptions,
       anySelected: this._selectedAssets.size > 0,
       selectedCount: this._selectedAssets.size,
       assetsPerRow: this._assetsPerRow,
@@ -325,8 +383,19 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
     // Bind column picker select
     const colPicker = content.querySelector("#column-picker");
     if (colPicker) {
+      colPicker.value = this._assetsPerRow.toString();
       colPicker.addEventListener("change", (ev) => {
         this._assetsPerRow = parseInt(ev.target.value);
+        this.render({ parts: ["main"] });
+      });
+    }
+
+    // Bind sort selector
+    const sortSelect = content.querySelector("#jenne-sort-select");
+    if (sortSelect) {
+      sortSelect.value = this._sortBy || "name-asc";
+      sortSelect.addEventListener("change", (ev) => {
+        this._sortBy = ev.target.value;
         this.render({ parts: ["main"] });
       });
     }
