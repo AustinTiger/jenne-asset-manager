@@ -1,7 +1,9 @@
+import { BeneosAdapter } from "./adapters/beneos-adapter.mjs";
+
 /**
  * Beneos Battlemaps Native Parser & Cloud Bridge
  * 
- * Uses the modern Beneos Cloud native installer pipeline from beneos-module.
+ * Uses the modern Beneos Cloud native installer pipeline from beneos-module via BeneosAdapter.
  * When the user imports a Beneos battlemap scene, this script leverages
  * BeneosNativeBattlemapInstaller to assemble the scene (walls, lighting, sounds, Monk's Active Tiles)
  * without requiring ScenePacker or Moulinette.
@@ -10,7 +12,7 @@ export async function parseBeneosPack(assets, targetPack, folderName = "") {
   const debug = game.settings.get("jenne-asset-manager", "debugMode");
   
   // 1. Verify beneos-module is active
-  if (!game.modules.get('beneos-module')?.active) {
+  if (!BeneosAdapter.isAvailable) {
     if (debug) console.warn("Jenne Asset Manager | beneos-module is not active. Falling back to standard scene import.");
     return await fallbackStandardImport(assets, targetPack, folderName);
   }
@@ -38,22 +40,22 @@ export async function parseBeneosPack(assets, targetPack, folderName = "") {
     return await fallbackStandardImport(assets, targetPack, folderName);
   }
 
-  if (debug) console.log(`Jenne Asset Manager | Importing Beneos package via native installer. Package ID: ${packageId}`);
+  if (debug) console.log(`Jenne Asset Manager | Importing Beneos package via BeneosAdapter. Package ID: ${packageId}`);
 
-  // 3. Dynamically import and run BeneosNativeBattlemapInstaller
+  // 3. Delegate to BeneosAdapter
   try {
-    const NativeInstallerModule = await import('/modules/beneos-module/scripts/cloud-v2/beneos-native-installer.mjs');
-    if (NativeInstallerModule?.BeneosNativeBattlemapInstaller) {
-      ui.notifications.info(`Installing Beneos Battlemap pack ${packageId} natively...`);
-      const installer = new NativeInstallerModule.BeneosNativeBattlemapInstaller({
-        packageId: packageId,
-        label: folderName || `Beneos Pack ${packageId}`,
-        overwrite: true
-      });
-      await installer.run();
-      ui.notifications.info(`Beneos Battlemap pack ${packageId} installed successfully.`);
-      return;
-    }
+    ui.notifications.info(`Installing Beneos Battlemap pack ${packageId} natively...`);
+    await BeneosAdapter.install({
+      id: packageId,
+      name: folderName || `Beneos Pack ${packageId}`,
+      type: "scene"
+    }, {
+      packageId: packageId,
+      label: folderName || `Beneos Pack ${packageId}`,
+      overwrite: true
+    });
+    ui.notifications.info(`Beneos Battlemap pack ${packageId} installed successfully.`);
+    return;
   } catch (err) {
     console.error("Jenne Asset Manager | Native Beneos Installer execution failed:", err);
   }

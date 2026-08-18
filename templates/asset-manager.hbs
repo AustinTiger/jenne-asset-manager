@@ -15,6 +15,21 @@
       </div>
       
       <div class="jenne-publisher-list" style="padding: 16px; display: flex; flex-direction: column; gap: 16px;">
+        <!-- Content Source Selector -->
+        <div class="toolbar-section flex-col">
+          <label for="source-picker"><i class="fas fa-plug"></i> Content Source:</label>
+          <select class="jenne-compendium-select" id="source-picker" style="width: 100%;">
+            <option value="all" {{#if (eq activeSource "all")}}selected{{/if}}>All Sources</option>
+            {{#if hasBeneos}}
+              <option value="beneos" {{#if (eq activeSource "beneos")}}selected{{/if}}>🐉 Beneos Battlemaps & Codex</option>
+            {{/if}}
+            {{#if hasDdb}}
+              <option value="ddb" {{#if (eq activeSource "ddb")}}selected{{/if}}>🎲 D&D Beyond Importer</option>
+            {{/if}}
+            <option value="local" {{#if (eq activeSource "local")}}selected{{/if}}>📁 Local Drive & Files</option>
+          </select>
+        </div>
+
         <!-- Columns count selector -->
         <div class="toolbar-section flex-col">
           <label for="column-picker"><i class="fas fa-th"></i> Preview Layout:</label>

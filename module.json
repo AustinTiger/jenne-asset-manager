@@ -1,11 +1,11 @@
 {
   "id": "jenne-asset-manager",
   "title": "Jenne Asset Manager",
-  "description": "A local-first asset manager and batch importer for FoundryVTT v14. Tracks imported assets via custom unique IDs and maintains support for Beneos Battlemaps legacy parsing.",
+  "description": "Universal asset orchestrator, batch importer, and deduplication engine for Foundry VTT. Unifies Beneos Battlemaps & Codex, D&D Beyond Importer, and local disk assets with deterministic cyrb53 tracking.",
   "version": "1.0.0",
   "authors": [
     {
-      "name": "Antigravity & John"
+      "name": "John Jenne & Antigravity"
     }
   ],
   "compatibility": {
@@ -23,16 +23,22 @@
       {
         "id": "jenne-suite",
         "type": "module"
-      },
-      {
-        "id": "beneos-module",
-        "type": "module"
-      },
-      {
-        "id": "monks-active-tiles",
-        "type": "module"
       }
-    ]
+    ],
+    "flags": {
+      "beneos-module": {
+        "title": "Beneos Module & Cloud",
+        "optional": true
+      },
+      "ddb-importer": {
+        "title": "D&D Beyond Importer",
+        "optional": true
+      },
+      "monks-active-tiles": {
+        "title": "Monk's Active Tile Triggers",
+        "optional": true
+      }
+    }
   },
   "flags": {
     "hotReload": {

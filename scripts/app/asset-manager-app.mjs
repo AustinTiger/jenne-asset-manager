@@ -3,6 +3,9 @@ import { ImportTracker } from "../tracker.mjs";
 import { batchImport } from "../importer.mjs";
 import { JenneSettingsApp } from "./settings-app.mjs";
 import { ASSET_TYPES } from "../config.mjs";
+import { SourceRouter } from "../adapters/source-router.mjs";
+import { BeneosAdapter } from "../adapters/beneos-adapter.mjs";
+import { DdbAdapter } from "../adapters/ddb-adapter.mjs";
 
 const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
 
@@ -13,6 +16,7 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
     this._isScanning = false;
     this._selectedAssets = new Set();
     this._searchQuery = "";
+    this._activeSource = "all";   // Content source filter ("all", "beneos", "ddb", "local")
     this._activeTab = "actors"; // Default start tab
     this._activeTags = new Set(); // Active tag filters
     this._targetPackId = "";      // Persistent target compendium ID
@@ -209,6 +213,9 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       compendiums: compendiums,
       subfolder: this._subfolder,
       activeTab: this._activeTab,
+      activeSource: this._activeSource || "all",
+      hasBeneos: BeneosAdapter.isAvailable,
+      hasDdb: DdbAdapter.isAvailable,
       tabs: tabs,
       tagsList: tagsList,
       searchQuery: this._searchQuery,
@@ -281,6 +288,16 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       folderTarget.value = this._subfolder;
       folderTarget.addEventListener("change", (ev) => {
         this._subfolder = ev.target.value.trim();
+      });
+    }
+
+    // Bind source picker select
+    const sourcePicker = content.querySelector("#source-picker");
+    if (sourcePicker) {
+      sourcePicker.value = this._activeSource || "all";
+      sourcePicker.addEventListener("change", (ev) => {
+        this._activeSource = ev.target.value;
+        this.render({ parts: ["main"] });
       });
     }
 

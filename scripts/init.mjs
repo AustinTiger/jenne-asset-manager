@@ -2,6 +2,10 @@ import { JenneAssetManagerApp } from "./app/asset-manager-app.mjs";
 import { BeneosBatchImporterApp } from "./app/beneos-batch-importer.mjs";
 import { JenneDDBPatchApp } from "./app/ddb-patch-app.mjs";
 import { setupCanvasDrop } from "./canvas-drop.mjs";
+import { SourceRouter } from "./adapters/source-router.mjs";
+import { BeneosAdapter } from "./adapters/beneos-adapter.mjs";
+import { DdbAdapter } from "./adapters/ddb-adapter.mjs";
+import { LocalDriveAdapter } from "./adapters/local-adapter.mjs";
 
 Hooks.once("init", () => {
   console.log("Jenne Asset Manager | Initializing module...");
@@ -10,6 +14,8 @@ Hooks.once("init", () => {
   globalThis.JenneAssetManagerApp = JenneAssetManagerApp;
   globalThis.BeneosBatchImporterApp = BeneosBatchImporterApp;
   globalThis.JenneDDBPatchApp = JenneDDBPatchApp;
+  globalThis.JenneSourceRouter = SourceRouter;
+  globalThis.JenneAdapters = { BeneosAdapter, DdbAdapter, LocalDriveAdapter };
 
   // Register Settings
   game.settings.register("jenne-asset-manager", "sourceDirectoriesList", {

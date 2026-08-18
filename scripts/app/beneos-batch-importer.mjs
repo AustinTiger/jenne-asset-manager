@@ -32,6 +32,8 @@
  *  @compatibility Foundry VTT v13+ (ApplicationV2)
  */
 
+import { BeneosAdapter } from "../adapters/beneos-adapter.mjs";
+
 const serverUrl = 'https://beneos.cloud';
 const apiEndpoint = `${serverUrl}/api-scenepacker.php`;
 
@@ -39,15 +41,16 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
     constructor(options = {}) {
         super(options);
         this._packagesFetched = false;
-            this.packages = [];
-            this.filteredPackages = [];
-            this.filteredMaps = [];
-            this.selectedPackages = new Set();
-            this.searchQuery = "";
-            this.showHD = false;
-            this.show4K = true;
-            this.showSubscribedOnly = false;
-            this.filterResolution = "4k"; // "any", "4k", "hd"
+        this.contentType = "scene"; // "scene", "actor", "spell", "item"
+        this.packages = [];
+        this.filteredPackages = [];
+        this.filteredMaps = [];
+        this.selectedPackages = new Set();
+        this.searchQuery = "";
+        this.showHD = false;
+        this.show4K = true;
+        this.showSubscribedOnly = false;
+        this.filterResolution = "4k"; // "any", "4k", "hd"
             this.filterSubscribed = "any"; // "any", "subscribed", "unsubscribed"
             this.isLinked = true;
             this.isLoading = true; // Premium loading indicator state
@@ -244,79 +247,10 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
                 }
             }
 
-            const isLoggedIn = (scenePacker?.sessionId && scenePacker.sessionId !== "anonymous") || (game.beneos?.cloud?.isLoggedIn?.() ?? false);
-            this.isLinked = !!isLoggedIn;
-
-            let loadedPacks = [];
-
-            // 1. Fetch releases directly from Beneos Cloud API
-            if (scenePacker) {
-                try {
-                    this.logStatus("Fetching available releases directly from Beneos Cloud...");
-                    const releases = await scenePacker.listReleases({ refresh: true });
-                    if (Array.isArray(releases) && releases.length > 0) {
-                        loadedPacks = releases.map(r => ({
-                            id: r.release_dir || r.id,
-                            name: r.display_name || r.name || r.release_dir,
-                            cover_image: r.cover_url || r.cover_image || r.img || "",
-                            author: "Beneos Battlemaps",
-                            version: "1.0.0",
-                            system: game.system.id,
-                            description: `${r.scene_count || r.nb_scenes || 0} scenes`,
-                            isOwned: r.can_install !== false,
-                            variants: r.variants_available || ["4K", "HD"],
-                            variant_dirs: r.variant_dirs || {}
-                        }));
-                    }
-                } catch (err) {
-                    console.warn("Beneos Batch Importer | BeneosScenePacker.listReleases failed:", err);
-                }
-            }
-
-            // 2. Try BeneosScenePacker.listPackages if listReleases was empty
-            if (loadedPacks.length === 0 && scenePacker) {
-                try {
-                    const rawPacks = await scenePacker.listPackages();
-                    if (Array.isArray(rawPacks) && rawPacks.length > 0) {
-                        loadedPacks = rawPacks.map(pkg => ({
-                            id: pkg.id || pkg.pack_ref,
-                            name: pkg.name,
-                            cover_image: pkg.cover_image || pkg.img || pkg.cover || pkg.icon || "",
-                            author: pkg.creator || pkg.author || "Beneos Battlemaps",
-                            version: pkg.version || "1.0.0",
-                            system: pkg.system || game.system.id,
-                            description: pkg.description || "",
-                            isOwned: pkg.can_install !== false
-                        }));
-                    }
-                } catch (err) {
-                    console.warn("Beneos Batch Importer | BeneosScenePacker.listPackages failed:", err);
-                }
-            }
-
-            // 3. Fallback: Local database catalog (offline resilience)
-            if (loadedPacks.length === 0) {
-                this.logStatus("Populating catalog from local Beneos database...");
-                const bmaps = game.beneos?.databaseHolder?.getAll?.("bmap") || {};
-                const releaseMap = new Map();
-                for (const [key, data] of Object.entries(bmaps)) {
-                    const props = data.properties || {};
-                    const relDir = props.release_dir || props.download_pack || key;
-                    if (!releaseMap.has(relDir)) {
-                        releaseMap.set(relDir, {
-                            id: relDir,
-                            name: props.download_pack || props.title || relDir,
-                            cover_image: data.picture || props.thumbnail || "",
-                            author: "Beneos Battlemaps",
-                            version: "1.0.0",
-                            system: game.system.id,
-                            description: "",
-                            isOwned: true
-                        });
-                    }
-                }
-                loadedPacks = Array.from(releaseMap.values());
-            }
+            this.isLinked = BeneosAdapter.isLoggedIn();
+            this.logStatus(`Fetching ${this.contentType || "scene"} catalog from Beneos Cloud...`);
+            
+            const loadedPacks = await BeneosAdapter.fetchCatalog(this.contentType || "scene", { refresh: true });
 
             this.packages = loadedPacks;
             this.packages.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
@@ -1837,6 +1771,22 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
                                 </div>
                             ` : ''}
 
+                            <!-- Top-level Content Type Switcher -->
+                            <div class="beneos-bi-type-switcher" style="display: flex; gap: 8px; margin-bottom: 8px; border-bottom: 1px solid #2e2920; padding-bottom: 8px;">
+                                <button class="beneos-bi-type-btn ${this.contentType === 'scene' ? 'active' : ''}" data-type="scene" style="background: ${this.contentType === 'scene' ? '#c89c5e' : '#151210'}; color: ${this.contentType === 'scene' ? '#0c0a09' : '#ebe9e5'}; border: 1px solid #2e2920; padding: 6px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-map"></i> Battlemaps
+                                </button>
+                                <button class="beneos-bi-type-btn ${this.contentType === 'actor' ? 'active' : ''}" data-type="actor" style="background: ${this.contentType === 'actor' ? '#c89c5e' : '#151210'}; color: ${this.contentType === 'actor' ? '#0c0a09' : '#ebe9e5'}; border: 1px solid #2e2920; padding: 6px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-dragon"></i> Creatures & Tokens
+                                </button>
+                                <button class="beneos-bi-type-btn ${this.contentType === 'spell' ? 'active' : ''}" data-type="spell" style="background: ${this.contentType === 'spell' ? '#c89c5e' : '#151210'}; color: ${this.contentType === 'spell' ? '#0c0a09' : '#ebe9e5'}; border: 1px solid #2e2920; padding: 6px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> Spells
+                                </button>
+                                <button class="beneos-bi-type-btn ${this.contentType === 'item' ? 'active' : ''}" data-type="item" style="background: ${this.contentType === 'item' ? '#c89c5e' : '#151210'}; color: ${this.contentType === 'item' ? '#0c0a09' : '#ebe9e5'}; border: 1px solid #2e2920; padding: 6px 14px; border-radius: 4px; font-weight: bold; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 6px;">
+                                    <i class="fa-solid fa-shield-halved"></i> Items & Loot
+                                </button>
+                            </div>
+
                             <!-- Dynamic Header with Segmented View Toggles and swapped Guide button -->
                             <div class="beneos-bi-content-header" style="display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; border-bottom: 1px solid #2e2920; padding-bottom: 8px; margin-bottom: 4px;">
                                 <div class="beneos-bi-matches-count" style="font-size: 13px; color: #a59d8e; font-weight: 500; justify-self: start;">
@@ -3198,6 +3148,14 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
             const performUninstall = async () => {
                 this.logStatus(`Uninstalling "${pkgName}"...`, "warning");
                 
+                try {
+                    if (pkgId && BeneosAdapter.isAvailable) {
+                        await BeneosAdapter.uninstall({ id: pkgId, name: pkgName }, { deleteFiles: true });
+                    }
+                } catch (e) {
+                    console.warn("Beneos Batch Importer | Native uninstaller note:", e);
+                }
+
                 const targets = new Set();
                 const cleanTarget = pkgName.toLowerCase().replace(/\s*(4k|hd|uhd|ultra hd|high def).*$/i, "").replace(/[^a-z0-9]/g, "");
                 targets.add(cleanTarget);
@@ -3975,51 +3933,21 @@ export class BeneosBatchImporterApp extends foundry.applications.api.Application
                     try {
                         let installed = false;
                         
-                        // 1. Try Native Beneos Cloud Battlemap Installer (Cloud v2, in-house, no Moulinette / ScenePacker required)
-                        let NativeInstallerModule = null;
-                        try {
-                            NativeInstallerModule = await import('/modules/beneos-module/scripts/cloud-v2/beneos-native-installer.mjs');
-                        } catch (e) {
-                            console.warn("Beneos Batch Importer | Native installer module load failed:", e);
-                        }
-
-                        if (NativeInstallerModule?.BeneosNativeBattlemapInstaller) {
-                            this.logStatus(`Launching BeneosNativeBattlemapInstaller for "${pkgName}"...`);
-                            const installer = new NativeInstallerModule.BeneosNativeBattlemapInstaller({
-                                packageId: pkgId,
-                                label: pkgName,
-                                coverUrl: pkgInfoObj?.cover_image || null,
-                                overwrite: this.optionCleanInstall
-                            });
-                            await installer.run();
-                            installed = true;
-                        } else if (scenePacker?.importPackage) {
-                            // Fallback to BeneosScenePackerManager
-                            this.logStatus(`Launching BeneosScenePackerManager for "${pkgName}"...`);
-                            await scenePacker.importPackage(pkgId);
-                            installed = true;
-                        } else {
-                            // Legacy Moulinette fallback
-                            const client = game.modules.get("moulinette")?.cloudclient;
-                            const mtSession = game.settings.get("moulinette", "session_ID") || "";
-                            if (!client || !mtSession) {
-                                throw new Error("No installer available: Beneos Native Installer not found and Moulinette is inactive.");
-                            }
-                            const packInfo = await client.apiPOST(`/scenepacker-assets/${pkgId}`, { 
-                                scope: { session: mtSession, mode: "cloud-accessible" }
-                            });
-                            if (!packInfo || !packInfo["mtte.json"]) throw new Error("Invalid manifest from Moulinette");
-                            const MoulinetteImporter = (await import('/modules/scene-packer/scripts/export-import/moulinette-importer.js')).default;
-                            const importer = new MoulinetteImporter({ packInfo, sceneID: '', actorID: '' });
-                            if (this.optionSuppressScenePacker) {
-                                importer.render = function() { return this; };
-                                importer._render = function() { return Promise.resolve(this); };
-                            }
-                            if (importer && typeof importer.process === "function") {
-                                await importer.process();
-                            }
-                            installed = true;
-                        }
+                        // 1. Delegate installation cleanly to BeneosAdapter
+                        this.logStatus(`Launching BeneosAdapter install for "${pkgName}"...`);
+                        await BeneosAdapter.install({
+                            id: pkgId,
+                            name: pkgName,
+                            type: this.contentType || "scene",
+                            cover_image: pkgInfoObj?.cover_image || null
+                        }, {
+                            packageId: pkgId,
+                            label: pkgName,
+                            resolution: this.filterResolution === "4k" ? "4K" : "HD",
+                            sceneSlugs: this.viewMode === "map" ? [pkgId] : null,
+                            overwrite: this.optionCleanInstall
+                        });
+                        installed = true;
 
                         if (!installed) {
                             throw new Error("Installation could not be started: no suitable installer engine found.");
