@@ -60,7 +60,10 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       stopAudio: JenneAssetManagerApp._onStopAudio,
       openBeneosImporter: JenneAssetManagerApp._onOpenBeneosImporter,
       installBeneosActor: JenneAssetManagerApp._onInstallBeneosActor,
-      openBeneosActor: JenneAssetManagerApp._onOpenBeneosActor
+      openBeneosActor: JenneAssetManagerApp._onOpenBeneosActor,
+      removeTag: JenneAssetManagerApp._onRemoveTag,
+      clearAllTags: JenneAssetManagerApp._onClearAllTags,
+      addCustomTag: JenneAssetManagerApp._onAddCustomTag
     }
   };
 
@@ -153,13 +156,6 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       active: this._activeTab === "mixed"
     });
 
-    // Build tags list for filter bar
-    const allowedTagsForTab = ASSET_TYPES[this._activeTab]?.tags || [];
-    const tagsList = allowedTagsForTab.map(tagName => ({
-      name: tagName,
-      checked: this._activeTags.has(tagName)
-    }));
-
     // Collect all assets from local publishers and external adapters
     const allAssets = [];
 
@@ -188,18 +184,52 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       }
     }
 
+    // Dynamic tag discovery across allAssets
+    const allDiscoveredTags = new Set();
+    const defaultTabTags = ASSET_TYPES[this._activeTab]?.tags || [];
+    defaultTabTags.forEach(t => t && allDiscoveredTags.add(t.trim()));
+
+    for (const asset of allAssets) {
+      if (Array.isArray(asset.tags)) {
+        asset.tags.forEach(t => t && allDiscoveredTags.add(t.trim()));
+      }
+      if (asset.biome) {
+        asset.biome.split(/[,/]/).forEach(b => b.trim() && allDiscoveredTags.add(b.trim()));
+      }
+      if (asset.creatureType) {
+        asset.creatureType.split(/[,/]/).forEach(c => c.trim() && allDiscoveredTags.add(c.trim()));
+      }
+    }
+
+    const availableTags = Array.from(allDiscoveredTags)
+      .filter(t => !this._activeTags.has(t))
+      .sort((a, b) => a.localeCompare(b));
+
+    const activeTagsList = Array.from(this._activeTags).map(tag => ({
+      name: tag
+    }));
+
     // Filter assets by tab category, active tags, and search query
     const filteredAssets = allAssets.filter((asset) => {
       // 1. Tab category filter
       const matchesTab = (tab === "mixed") || (asset.packType === tab) || (tab === "actors" && asset.type === "actor");
       if (!matchesTab) return false;
 
-      // 2. Active tags filter
+      // 2. Dynamic active tags filter (asset matches if all active tags match any property)
       if (this._activeTags.size > 0) {
-        const hasTag = (asset.tags || []).some(t => this._activeTags.has(t)) ||
-                       (asset.biome && this._activeTags.has(asset.biome)) ||
-                       (asset.creatureType && this._activeTags.has(asset.creatureType));
-        if (!hasTag) return false;
+        const tagHaystack = [
+          ...(Array.isArray(asset.tags) ? asset.tags : []),
+          asset.biome || "",
+          asset.creatureType || "",
+          asset.packName || "",
+          asset.name || "",
+          asset.filename || ""
+        ].join(" ").toLowerCase();
+
+        const matchesAllTags = Array.from(this._activeTags).every(t => 
+          tagHaystack.includes(t.toLowerCase())
+        );
+        if (!matchesAllTags) return false;
       }
 
       // 3. Status filter (installed, cloud/uninstalled, update, new, locked)
@@ -323,7 +353,9 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       hasBeneos: BeneosAdapter.isAvailable,
       hasDdb: DdbAdapter.isAvailable,
       tabs: tabs,
-      tagsList: tagsList,
+      availableTags: availableTags,
+      activeTagsList: activeTagsList,
+      hasActiveTags: activeTagsList.length > 0,
       searchQuery: this._searchQuery,
       statusFilter: this._statusFilter,
       statusOptions: statusOptions,
@@ -452,18 +484,31 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       });
     }
 
-    // Bind tag filter checkboxes
-    content.querySelectorAll(".jenne-tag-checkbox").forEach(cb => {
-      cb.addEventListener("change", (ev) => {
-        const tagName = cb.dataset.tagName;
-        if (ev.target.checked) {
-          this._activeTags.add(tagName);
-        } else {
-          this._activeTags.delete(tagName);
+    // Bind dynamic add-tag dropdown select
+    const addTagSelect = content.querySelector("#jenne-add-tag-dropdown");
+    if (addTagSelect) {
+      addTagSelect.addEventListener("change", (ev) => {
+        const val = ev.target.value;
+        if (val) {
+          this._activeTags.add(val);
+          this.render({ parts: ["main"] });
         }
-        this.render({ parts: ["main"] });
       });
-    });
+    }
+
+    // Bind custom tag input Enter keypress
+    const customTagInput = content.querySelector("#jenne-custom-tag-input");
+    if (customTagInput) {
+      customTagInput.addEventListener("keydown", (ev) => {
+        if (ev.key === "Enter") {
+          ev.preventDefault();
+          if (ev.target.value.trim()) {
+            this._activeTags.add(ev.target.value.trim());
+            this.render({ parts: ["main"] });
+          }
+        }
+      });
+    }
 
     // Add drag handlers for canvas drag-and-drop
     content.querySelectorAll(".jenne-asset-card.draggable, .jenne-beneos-actor-card.draggable").forEach((card) => {
@@ -864,5 +909,33 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       },
       no: () => {}
     });
+  }
+
+  static _onRemoveTag(event, target) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const tag = target?.dataset?.tag;
+    if (tag) {
+      this._activeTags.delete(tag);
+      this.render({ parts: ["main"] });
+    }
+  }
+
+  static _onClearAllTags(event, target) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    this._activeTags.clear();
+    this.render({ parts: ["main"] });
+  }
+
+  static _onAddCustomTag(event, target) {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const input = this.element.querySelector("#jenne-custom-tag-input");
+    if (input && input.value.trim()) {
+      this._activeTags.add(input.value.trim());
+      input.value = "";
+      this.render({ parts: ["main"] });
+    }
   }
 }

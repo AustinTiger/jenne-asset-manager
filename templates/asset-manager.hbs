@@ -175,21 +175,53 @@
           </button>
         </div>
 
-        <!-- Tag Filters Checkboxes Bar -->
-        {{#if tagsList.length}}
-          <div class="jenne-tags-filter-bar">
-            <span class="filter-label"><i class="fas fa-filter"></i> Filter Tags:</span>
-            <div class="tag-filters-list">
-              {{#each tagsList}}
-                <label class="tag-checkbox-label">
-                  <input type="checkbox" class="jenne-tag-checkbox" data-tag-name="{{name}}" {{#if checked}}checked{{/if}}>
-                  <span class="tag-checkbox-custom"></span>
-                  <span class="tag-text">{{name}}</span>
-                </label>
+        <!-- Dynamic Tag Filters Bar -->
+        <div class="jenne-dynamic-tags-bar">
+          <div class="active-tags-container">
+            <span class="filter-label"><i class="fas fa-tags"></i> Active Tags:</span>
+            
+            {{#if activeTagsList.length}}
+              <div class="active-tags-chips">
+                {{#each activeTagsList}}
+                  <span class="active-tag-chip">
+                    <span class="tag-text">{{name}}</span>
+                    <button type="button" class="btn-remove-tag" data-action="removeTag" data-tag="{{name}}" title="Remove tag">&times;</button>
+                  </span>
+                {{/each}}
+                
+                <button type="button" class="btn-clear-all-tags" data-action="clearAllTags" title="Clear all active tags">
+                  Clear All
+                </button>
+              </div>
+            {{else}}
+              <span class="no-tags-hint">No active tag filters.</span>
+            {{/if}}
+          </div>
+
+          <!-- Add Tag Filter Controls -->
+          <div class="add-tag-control">
+            <!-- Dropdown of Discovered Catalog Tags -->
+            <select class="jenne-add-tag-select" id="jenne-add-tag-dropdown">
+              <option value="">+ Choose Tag...</option>
+              {{#each availableTags}}
+                <option value="{{this}}">{{this}}</option>
               {{/each}}
+            </select>
+
+            <!-- Custom Tag Type-in with Enter key or Add button -->
+            <div class="custom-tag-input-group">
+              <input type="text" class="jenne-custom-tag-input" id="jenne-custom-tag-input" placeholder="Type tag..." list="jenne-tag-datalist">
+              <datalist id="jenne-tag-datalist">
+                {{#each availableTags}}
+                  <option value="{{this}}">
+                {{/each}}
+              </datalist>
+              <button type="button" class="jenne-btn-add-tag" data-action="addCustomTag" title="Add custom tag filter">
+                <i class="fas fa-plus"></i> Add
+              </button>
             </div>
           </div>
-        {{/if}}
+        </div>
       </header>
 
       <!-- Asset Grid -->

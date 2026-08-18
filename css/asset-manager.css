@@ -947,85 +947,155 @@
   font-size: 11px !important;
 }
 
-/* Main GUI Tag Filters Bar */
-.jenne-tags-filter-bar {
+/* Dynamic Tag Filters Bar & Pill Controls */
+.jenne-dynamic-tags-bar {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 12px;
   margin-top: 10px;
   padding: 8px 12px;
   background: var(--bg-secondary);
   border: 1px solid var(--border-color);
   border-radius: 6px;
+  flex-wrap: wrap;
 }
 
-.filter-label {
-  font-family: 'Cinzel', Georgia, serif;
-  font-size: 11px;
-  font-weight: bold;
-  letter-spacing: 0.05em;
-  color: var(--text-active);
+.active-tags-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 250px;
+}
+
+.active-tags-chips {
   display: flex;
   align-items: center;
   gap: 6px;
-}
-
-.tag-filters-list {
-  display: flex;
   flex-wrap: wrap;
-  gap: 12px;
 }
 
-.tag-checkbox-label {
+.active-tag-chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  cursor: pointer;
+  background: rgba(212, 168, 87, 0.15);
+  border: 1px solid #d4a857;
+  color: #f0d486;
+  border-radius: 4px;
+  padding: 2px 8px;
   font-size: 11px;
-  color: var(--text-muted);
+  font-weight: 500;
+  animation: fadeIn 0.15s ease-in-out;
+}
+
+.active-tag-chip .tag-text {
   user-select: none;
+}
+
+.btn-remove-tag {
+  background: transparent;
+  border: none;
+  color: #d4a857;
+  cursor: pointer;
+  padding: 0;
+  font-size: 13px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   transition: color 0.15s ease;
 }
 
-.tag-checkbox-label:hover {
+.btn-remove-tag:hover {
+  color: #ef4444;
+}
+
+.btn-clear-all-tags {
+  background: transparent;
+  border: none;
+  color: #a89f91;
+  font-size: 10.5px;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 2px 4px;
+  transition: color 0.15s ease;
+}
+
+.btn-clear-all-tags:hover {
+  color: #ef4444;
+}
+
+.no-tags-hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.add-tag-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+}
+
+.jenne-add-tag-select {
+  background: var(--bg-tertiary);
   color: var(--text-main);
-}
-
-.tag-checkbox-label input[type="checkbox"] {
-  display: none;
-}
-
-.tag-checkbox-custom {
-  width: 14px;
-  height: 14px;
   border: 1px solid var(--border-color);
-  border-radius: 3px;
-  background: var(--bg-primary);
-  display: inline-block;
-  position: relative;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11.5px;
+  height: 30px;
+  max-width: 160px;
+  cursor: pointer;
+}
+
+.custom-tag-input-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.jenne-custom-tag-input {
+  background: var(--bg-tertiary);
+  color: var(--text-main);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 11.5px;
+  height: 30px;
+  width: 120px;
+  transition: width 0.2s ease, border-color 0.15s ease;
+}
+
+.jenne-custom-tag-input:focus {
+  width: 150px;
+  border-color: var(--text-active);
+  outline: none;
+}
+
+.jenne-btn-add-tag {
+  background: rgba(212, 168, 87, 0.18);
+  border: 1px solid #d4a857;
+  color: #f0d486;
+  border-radius: 4px;
+  padding: 0 8px;
+  height: 30px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   transition: all 0.15s ease;
 }
 
-.tag-checkbox-label input[type="checkbox"]:checked + .tag-checkbox-custom {
-  background: var(--text-active);
-  border-color: var(--text-active);
-}
-
-.tag-checkbox-label input[type="checkbox"]:checked + .tag-checkbox-custom::after {
-  content: '';
-  position: absolute;
-  left: 4px;
-  top: 1px;
-  width: 4px;
-  height: 8px;
-  border: solid #000;
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-}
-
-.tag-checkbox-label input[type="checkbox"]:checked ~ .tag-text {
-  color: var(--text-active);
-  font-weight: 500;
+.jenne-btn-add-tag:hover {
+  background: #d4a857;
+  color: #120e0b;
 }
 
 
