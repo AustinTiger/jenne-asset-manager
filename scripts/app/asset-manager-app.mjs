@@ -27,6 +27,7 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
     this._activeAudio = null;     // Active playing audio node
     this._lastSelectedId = null;  // Tracking last clicked ID for shift-click selection
     this._sortBy = "name-asc";    // Default sort order ("name-asc", "name-desc", "cr-asc", "cr-desc", "status-installed", "status-updates")
+    this._selectedBatchAction = "import-compendium"; // Default batch action
   }
 
   static DEFAULT_OPTIONS = {
@@ -50,6 +51,7 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       toggleSelectAll: JenneAssetManagerApp._onToggleSelectAll,
       openDocument: JenneAssetManagerApp._onOpenDocument,
       triggerImport: JenneAssetManagerApp._onTriggerImport,
+      triggerBatchAction: JenneAssetManagerApp._onTriggerBatchAction,
       openSettings: JenneAssetManagerApp._onOpenSettings,
       openPreview: JenneAssetManagerApp._onOpenPreview,
       closePreview: JenneAssetManagerApp._onClosePreview,
@@ -298,6 +300,7 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       searchQuery: this._searchQuery,
       sortBy: this._sortBy,
       sortOptions: sortOptions,
+      selectedBatchAction: this._selectedBatchAction || "import-compendium",
       anySelected: this._selectedAssets.size > 0,
       selectedCount: this._selectedAssets.size,
       assetsPerRow: this._assetsPerRow,
@@ -316,7 +319,7 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       this._performScan().then(() => {
         this._isScanning = false;
         this.render({ force: true });
-      }).catch((err) => {
+      }).catch(err => {
         console.error("Jenne Asset Manager | Scanning failed:", err);
         this._isScanning = false;
         this.render({ force: true });
@@ -377,6 +380,15 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       sourcePicker.addEventListener("change", (ev) => {
         this._activeSource = ev.target.value;
         this.render({ parts: ["main"] });
+      });
+    }
+
+    // Bind batch action select
+    const batchActionSelect = content.querySelector("#jenne-batch-action-select");
+    if (batchActionSelect) {
+      batchActionSelect.value = this._selectedBatchAction || "import-compendium";
+      batchActionSelect.addEventListener("change", (ev) => {
+        this._selectedBatchAction = ev.target.value;
       });
     }
 
@@ -545,7 +557,7 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
   }
 
   static _onToggleSelectAll(event, target) {
-    const visibleCards = this.element.querySelectorAll(".jenne-asset-card");
+    const visibleCards = this.element.querySelectorAll(".jenne-asset-card, .jenne-beneos-actor-card");
     const allSelected = Array.from(visibleCards).every((card) => 
       this._selectedAssets.has(card.dataset.assetId)
     );
@@ -715,5 +727,107 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
     }
 
     ui.notifications.warn(`Actor sheet for "${key}" not found in world or compendiums.`);
+  }
+
+  static async _onTriggerBatchAction(event, target) {
+    if (this._selectedAssets.size === 0) {
+      ui.notifications.warn("Please select at least one asset to perform this action.");
+      return;
+    }
+
+    const action = this._selectedBatchAction || "import-compendium";
+    const selectedIds = Array.from(this._selectedAssets);
+
+    if (action === "import-compendium") {
+      return await JenneAssetManagerApp._onTriggerImport.call(this, event, target);
+    }
+
+    if (action === "beneos-install") {
+      await this._executeBeneosBatchInstall(selectedIds);
+    } else if (action === "beneos-update") {
+      await this._executeBeneosBatchUpdate(selectedIds);
+    } else if (action === "beneos-uninstall") {
+      await this._executeBeneosBatchUninstall(selectedIds);
+    }
+  }
+
+  async _executeBeneosBatchInstall(selectedIds) {
+    if (!BeneosAdapter.isAvailable) {
+      return ui.notifications.warn("Beneos module is not active in Foundry.");
+    }
+
+    const tokensToInstall = selectedIds.map(id => id.replace(/^beneos_actor_/, ""));
+    ui.notifications.info(`Starting batch download/install of ${tokensToInstall.length} Beneos creatures...`);
+
+    let installedCount = 0;
+    for (const key of tokensToInstall) {
+      try {
+        await BeneosAdapter.install({ key, type: "actor" }, { key });
+        installedCount++;
+      } catch (err) {
+        console.error(`Jenne Asset Manager | Error installing "${key}":`, err);
+      }
+    }
+
+    ui.notifications.info(`Successfully installed ${installedCount} of ${tokensToInstall.length} creatures.`);
+    this._selectedAssets.clear();
+    this.render();
+  }
+
+  async _executeBeneosBatchUpdate(selectedIds) {
+    if (!BeneosAdapter.isAvailable) {
+      return ui.notifications.warn("Beneos module is not active in Foundry.");
+    }
+
+    const tokensToUpdate = selectedIds.map(id => id.replace(/^beneos_actor_/, ""));
+    ui.notifications.info(`Starting batch update of ${tokensToUpdate.length} Beneos creatures...`);
+
+    let updatedCount = 0;
+    for (const key of tokensToUpdate) {
+      try {
+        await BeneosAdapter.install({ key, type: "actor" }, { key });
+        updatedCount++;
+      } catch (err) {
+        console.error(`Jenne Asset Manager | Error updating "${key}":`, err);
+      }
+    }
+
+    ui.notifications.info(`Successfully updated ${updatedCount} creatures.`);
+    this._selectedAssets.clear();
+    this.render();
+  }
+
+  async _executeBeneosBatchUninstall(selectedIds) {
+    if (!BeneosAdapter.isAvailable) {
+      return ui.notifications.warn("Beneos module is not active in Foundry.");
+    }
+
+    const count = selectedIds.length;
+    Dialog.confirm({
+      title: "Batch Uninstall Confirmation",
+      content: `
+        <div style="font-family: 'Signika', sans-serif; padding: 5px;">
+          <p>Are you sure you want to uninstall and remove <strong>${count}</strong> selected Beneos creatures from this World?</p>
+          <p style="color: #e57373; font-size: 0.9em;">This will delete all corresponding World Actor documents for these creatures.</p>
+        </div>
+      `,
+      yes: async () => {
+        ui.notifications.info(`Uninstalling ${count} creatures...`);
+        let uninstalledCount = 0;
+        for (const id of selectedIds) {
+          try {
+            const key = id.replace(/^beneos_actor_/, "");
+            await BeneosAdapter.uninstall({ key, type: "actor" }, { key });
+            uninstalledCount++;
+          } catch (err) {
+            console.error(`Jenne Asset Manager | Error uninstalling "${id}":`, err);
+          }
+        }
+        ui.notifications.info(`Successfully uninstalled ${uninstalledCount} creatures.`);
+        this._selectedAssets.clear();
+        this.render();
+      },
+      no: () => {}
+    });
   }
 }

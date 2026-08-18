@@ -21,12 +21,12 @@
           <select class="jenne-compendium-select" id="source-picker" style="width: 100%;">
             <option value="all" {{#if (eq activeSource "all")}}selected{{/if}}>All Sources</option>
             {{#if hasBeneos}}
-              <option value="beneos" {{#if (eq activeSource "beneos")}}selected{{/if}}>🐉 Beneos Battlemaps & Codex</option>
+              <option value="beneos" {{#if (eq activeSource "beneos")}}selected{{/if}}>🐉 Beneos</option>
             {{/if}}
             {{#if hasDdb}}
-              <option value="ddb" {{#if (eq activeSource "ddb")}}selected{{/if}}>🎲 D&D Beyond Importer</option>
+              <option value="ddb" {{#if (eq activeSource "ddb")}}selected{{/if}}>🎲 D&D Beyond</option>
             {{/if}}
-            <option value="local" {{#if (eq activeSource "local")}}selected{{/if}}>📁 Local Drive & Files</option>
+            <option value="local" {{#if (eq activeSource "local")}}selected{{/if}}>📁 Local Drive</option>
           </select>
         </div>
 
@@ -68,10 +68,26 @@
         </button>
       </div>
 
-      <!-- Action Button at the bottom of the left sidebar -->
-      <div style="padding: 16px; border-top: 1px solid var(--border-color); margin-top: auto;">
-        <button class="jenne-btn btn-primary {{#unless anySelected}}disabled{{/unless}}" data-action="triggerImport" {{#unless anySelected}}disabled{{/unless}} style="width: 100%; height: 42px; display: flex; justify-content: center; align-items: center; gap: 8px; font-weight: bold; font-size: 13px;">
-          <i class="fas fa-download"></i> Import Selected ({{selectedCount}})
+      <!-- Action Control at the bottom of the left sidebar -->
+      <div class="jenne-batch-action-panel" style="padding: 14px; border-top: 1px solid var(--border-color); margin-top: auto; display: flex; flex-direction: column; gap: 8px; background: rgba(0,0,0,0.15);">
+        <label for="jenne-batch-action-select" style="font-size: 11px; color: var(--text-muted); font-family: 'Cinzel', serif; display: flex; align-items: center; gap: 6px;">
+          <i class="fas fa-bolt" style="color: var(--text-active);"></i> Action for Selected:
+        </label>
+        
+        <select class="jenne-compendium-select" id="jenne-batch-action-select" style="width: 100%; font-size: 11.5px; height: 32px;">
+          <option value="import-compendium" {{#if (eq selectedBatchAction "import-compendium")}}selected{{/if}}>📦 Import to Compendium</option>
+          {{#if hasBeneos}}
+            <option value="beneos-install" {{#if (eq selectedBatchAction "beneos-install")}}selected{{/if}}>📥 Download / Install (Beneos)</option>
+            <option value="beneos-update" {{#if (eq selectedBatchAction "beneos-update")}}selected{{/if}}>🔄 Update (Beneos)</option>
+            <option value="beneos-uninstall" {{#if (eq selectedBatchAction "beneos-uninstall")}}selected{{/if}}>🗑️ Uninstall (Beneos)</option>
+          {{/if}}
+        </select>
+
+        <button class="jenne-btn btn-primary {{#unless anySelected}}disabled{{/unless}}" 
+                data-action="triggerBatchAction" 
+                {{#unless anySelected}}disabled{{/unless}} 
+                style="width: 100%; height: 38px; display: flex; justify-content: center; align-items: center; gap: 8px; font-weight: bold; font-size: 12.5px;">
+          <i class="fas fa-play"></i> Execute ({{selectedCount}})
         </button>
       </div>
     </aside>

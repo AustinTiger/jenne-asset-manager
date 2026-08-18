@@ -355,10 +355,50 @@ export class BeneosAdapter extends BaseSourceAdapter {
     }
 
     /**
-     * Uninstalls a Beneos battlemap release cleanly
+     * Uninstalls a Beneos creature / token from world and compendium
+     */
+    static async _uninstallCreature(item, options = {}) {
+        const key = item.key || item.tokenKey || (typeof item.id === "string" ? item.id.replace(/^beneos_actor_/, "") : item.id);
+        if (!key) return { success: false };
+
+        const cleanKey = key.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+        // 1. Delete world actors matching this token
+        const worldActors = game.actors.filter(a => {
+            const flagKey = a.flags?.["beneos-module"]?.key || a.flags?.["beneos-module"]?.tokenKey;
+            if (flagKey && flagKey === key) return true;
+            const cleanName = a.name.toLowerCase().replace(/[^a-z0-9]/g, "");
+            return cleanName === cleanKey || (cleanKey.length > 4 && cleanName.includes(cleanKey));
+        });
+
+        for (const actor of worldActors) {
+            try {
+                await actor.delete();
+            } catch (e) {
+                console.warn(`BeneosAdapter | Error deleting world actor "${actor.name}":`, e);
+            }
+        }
+
+        // 2. Reset in-memory database status if available
+        if (game.beneos?.databaseHolder?.get?.("token", key)) {
+            const tokenData = game.beneos.databaseHolder.get("token", key);
+            tokenData.isInstalled = false;
+            tokenData.installed = "notinstalled";
+        }
+
+        return { success: true, key, count: worldActors.length };
+    }
+
+    /**
+     * Uninstalls a Beneos asset (battlemap release, creature token, spell, or item)
      */
     static async uninstall(item, options = {}) {
         if (!this.isAvailable) throw new Error("Beneos module is not active.");
+
+        const contentType = item.type || options.type || "scene";
+        if (contentType === "actor" || contentType === "token" || contentType === "creature") {
+            return await this._uninstallCreature(item, options);
+        }
 
         const { BeneosNativeBattlemapUninstaller } = await import('/modules/beneos-module/scripts/cloud-v2/beneos-native-uninstaller.mjs');
         const packageId = item.id || item.packageId || options.packageId;
