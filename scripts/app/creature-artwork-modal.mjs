@@ -3,7 +3,9 @@
  * Displays all associated 2.5D tokens, Top-Down tokens, portraits, and variant artwork for a creature.
  */
 
-export class JenneCreatureArtworkModal extends foundry.applications.api.ApplicationV2 {
+const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
+
+export class JenneCreatureArtworkModal extends HandlebarsApplicationMixin(ApplicationV2) {
   constructor(options = {}) {
     super(options);
     this._key = options.key || "";
