@@ -204,9 +204,6 @@
                             <i class="fa-solid fa-rotate"></i> Update
                           </button>
                         {{/if}}
-                        <button class="beneos-btn-action btn-open" data-action="openBeneosActor" data-key="{{key}}" title="Open Actor Sheet">
-                          <i class="fa-solid fa-up-right-from-square"></i> Open
-                        </button>
                       {{else if isOwned}}
                         <button class="beneos-btn-action btn-install" data-action="installBeneosActor" data-key="{{key}}" title="Download and install creature">
                           <i class="fa-solid fa-cloud-arrow-down"></i> Install
@@ -216,6 +213,10 @@
                           <i class="fa-solid fa-lock"></i> Locked
                         </span>
                       {{/if}}
+
+                      <button class="beneos-btn-action btn-open" data-action="openBeneosActor" data-key="{{key}}" title="Open Actor Sheet / Codex / Details">
+                        <i class="fa-solid fa-up-right-from-square"></i> Open
+                      </button>
                     </div>
                   </div>
                 </div>
