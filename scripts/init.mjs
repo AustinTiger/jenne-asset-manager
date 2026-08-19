@@ -115,36 +115,12 @@ Hooks.on("getSceneControlButtons", (controls) => {
         return ui.notifications.error("The 'Jenne Auto Color' module must be active to configure it.");
       }
 
-      // Open Settings Config
-      const settingsApp = new SettingsConfig();
-      settingsApp.render(true);
-      
-      // Wait for it to render and scroll to the Jenne Auto Color settings
-      Hooks.once("renderSettingsConfig", (app, html) => {
-         const el = html.jquery ? html[0] : html;
-         
-         // Activate the modules tab if possible
-         if (app.tabs && app.tabs[0]) {
-             app.tabs[0].activate("modules");
-         } else {
-             const tabBtn = el.querySelector('a[data-tab="modules"], .item[data-tab="modules"]');
-             if (tabBtn) tabBtn.click();
-         }
-         
-         setTimeout(() => {
-             // Find a setting input for jenne-auto-color to scroll into view
-             const input = el.querySelector('[name^="jenne-auto-color."]');
-             if (input) {
-                 const container = input.closest('.form-group') || input;
-                 container.scrollIntoView({ behavior: "smooth", block: "center" });
-                 // Briefly flash the background to highlight it
-                 const originalBg = container.style.backgroundColor;
-                 container.style.transition = "background-color 0.5s ease";
-                 container.style.backgroundColor = "rgba(100, 150, 255, 0.3)";
-                 setTimeout(() => { container.style.backgroundColor = originalBg; }, 1500);
-             }
-         }, 100);
-      });
+      // Directly open dedicated Jenne Auto Color Settings HUD
+      if (globalThis.JenneAutoColorConfig) {
+        new globalThis.JenneAutoColorConfig().render(true);
+      } else {
+        new SettingsConfig().render(true);
+      }
     }
   };
   addTool(autoColorTool);
