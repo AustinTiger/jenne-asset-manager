@@ -269,17 +269,79 @@ export class BeneosAdapter extends BaseSourceAdapter {
     }
 
     /**
-     * Installs a Beneos asset natively
+     * Downloads Beneos asset(s) directly to Compendiums without creating World Actor documents
+     */
+    static async download(item, options = {}) {
+        if (!this.isAvailable) throw new Error("Beneos module is not active in Foundry.");
+
+        const contentType = item.type || options.type || "actor";
+        const key = item.key || item.tokenKey || item.id;
+        const cloud = game.beneos?.cloud;
+
+        if (contentType === "actor" || contentType === "token" || contentType === "creature") {
+            const prevNoWorldImport = cloud?.noWorldImport;
+            if (cloud) cloud.noWorldImport = true;
+            try {
+                if (cloud?.importTokenFromCloud) {
+                    await cloud.importTokenFromCloud(key, options.packId, false, { gated: true });
+                } else if (cloud?.installToken) {
+                    await cloud.installToken(key);
+                } else {
+                    const { CreatureInstaller } = await import('/modules/beneos-module/scripts/creature-installer/creature-installer.mjs');
+                    await CreatureInstaller?.install?.(key);
+                }
+            } finally {
+                if (cloud) cloud.noWorldImport = prevNoWorldImport;
+            }
+            return { success: true, key, mode: "compendium" };
+        } else if (contentType === "spell") {
+            const prevNoWorldImport = cloud?.noWorldImport;
+            if (cloud) cloud.noWorldImport = true;
+            try {
+                if (cloud?.importSpellsFromCloud) {
+                    await cloud.importSpellsFromCloud(key, options.packId, false, { gated: true });
+                }
+            } finally {
+                if (cloud) cloud.noWorldImport = prevNoWorldImport;
+            }
+            return { success: true, key, mode: "compendium" };
+        } else if (contentType === "item" || contentType === "loot") {
+            const prevNoWorldImport = cloud?.noWorldImport;
+            if (cloud) cloud.noWorldImport = true;
+            try {
+                if (cloud?.importItemFromCloud) {
+                    await cloud.importItemFromCloud(key, options.packId, false, { gated: true });
+                }
+            } finally {
+                if (cloud) cloud.noWorldImport = prevNoWorldImport;
+            }
+            return { success: true, key, mode: "compendium" };
+        } else if (contentType === "scene" || contentType === "bmap" || contentType === "battlemap") {
+            return await this._installBattlemap(item, options);
+        }
+
+        throw new Error(`Unsupported Beneos content type: ${contentType}`);
+    }
+
+    /**
+     * Installs a Beneos asset natively (creates World Actor / Document as well as Compendium entry)
      */
     static async install(item, options = {}) {
         if (!this.isAvailable) throw new Error("Beneos module is not active in Foundry.");
 
         const contentType = item.type || options.type || "scene";
+        const cloud = game.beneos?.cloud;
 
         if (contentType === "scene" || contentType === "bmap" || contentType === "battlemap") {
             return await this._installBattlemap(item, options);
         } else if (contentType === "actor" || contentType === "token" || contentType === "creature") {
-            return await this._installCreature(item, options);
+            const prevNoWorldImport = cloud?.noWorldImport;
+            if (cloud) cloud.noWorldImport = false;
+            try {
+                return await this._installCreature(item, options);
+            } finally {
+                if (cloud) cloud.noWorldImport = prevNoWorldImport;
+            }
         } else if (contentType === "spell") {
             return await this._installSpell(item, options);
         } else if (contentType === "item" || contentType === "loot") {

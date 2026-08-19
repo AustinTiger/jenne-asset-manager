@@ -59,6 +59,7 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       playAudio: JenneAssetManagerApp._onPlayAudio,
       stopAudio: JenneAssetManagerApp._onStopAudio,
       openBeneosImporter: JenneAssetManagerApp._onOpenBeneosImporter,
+      downloadBeneosActor: JenneAssetManagerApp._onDownloadBeneosActor,
       installBeneosActor: JenneAssetManagerApp._onInstallBeneosActor,
       openBeneosActor: JenneAssetManagerApp._onOpenBeneosActor,
       removeTag: JenneAssetManagerApp._onRemoveTag,
@@ -777,6 +778,28 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
     new BeneosBatchImporterApp().render({ force: true });
   }
 
+  static async _onDownloadBeneosActor(event, target) {
+    event.preventDefault();
+    event.stopPropagation();
+    const key = target.dataset.key;
+    if (!key) return;
+
+    target.disabled = true;
+    target.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
+
+    try {
+      ui.notifications.info(`Downloading Beneos Creature "${key}" to Compendium...`);
+      await BeneosAdapter.download({ key: key, type: "actor" }, { key: key });
+      ui.notifications.info(`Beneos Creature "${key}" downloaded to Compendium!`);
+      this.render();
+    } catch (err) {
+      console.error("Jenne Asset Manager | Error downloading Beneos actor:", err);
+      ui.notifications.error(`Failed to download creature: ${err.message}`);
+      target.disabled = false;
+      target.innerHTML = `<i class="fa-solid fa-cloud-arrow-down"></i> Download`;
+    }
+  }
+
   static async _onInstallBeneosActor(event, target) {
     event.preventDefault();
     event.stopPropagation();
@@ -787,7 +810,7 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
     target.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i>`;
 
     try {
-      ui.notifications.info(`Installing Beneos Creature "${key}"...`);
+      ui.notifications.info(`Installing Beneos Creature "${key}" to World Actors...`);
       await BeneosAdapter.install({ key: key, type: "actor" }, { key: key });
       ui.notifications.info(`Beneos Creature "${key}" installed successfully!`);
       this.render();
@@ -795,7 +818,7 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       console.error("Jenne Asset Manager | Error installing Beneos actor:", err);
       ui.notifications.error(`Failed to install creature: ${err.message}`);
       target.disabled = false;
-      target.innerHTML = `<i class="fa-solid fa-cloud-arrow-down"></i> Install`;
+      target.innerHTML = `<i class="fa-solid fa-dragon"></i> Install`;
     }
   }
 
@@ -822,7 +845,9 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       return await JenneAssetManagerApp._onTriggerImport.call(this, event, target);
     }
 
-    if (action === "beneos-install") {
+    if (action === "beneos-download") {
+      await this._executeBeneosBatchDownload(selectedIds);
+    } else if (action === "beneos-install") {
       await this._executeBeneosBatchInstall(selectedIds);
     } else if (action === "beneos-update") {
       await this._executeBeneosBatchUpdate(selectedIds);
@@ -831,13 +856,36 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
     }
   }
 
+  async _executeBeneosBatchDownload(selectedIds) {
+    if (!BeneosAdapter.isAvailable) {
+      return ui.notifications.warn("Beneos module is not active in Foundry.");
+    }
+
+    const tokensToDownload = selectedIds.map(id => id.replace(/^beneos_actor_/, ""));
+    ui.notifications.info(`Starting batch download of ${tokensToDownload.length} Beneos creatures to Compendiums...`);
+
+    let downloadedCount = 0;
+    for (const key of tokensToDownload) {
+      try {
+        await BeneosAdapter.download({ key, type: "actor" }, { key });
+        downloadedCount++;
+      } catch (err) {
+        console.error(`Jenne Asset Manager | Error downloading "${key}":`, err);
+      }
+    }
+
+    ui.notifications.info(`Successfully downloaded ${downloadedCount} of ${tokensToDownload.length} creatures into Compendiums.`);
+    this._selectedAssets.clear();
+    this.render();
+  }
+
   async _executeBeneosBatchInstall(selectedIds) {
     if (!BeneosAdapter.isAvailable) {
       return ui.notifications.warn("Beneos module is not active in Foundry.");
     }
 
     const tokensToInstall = selectedIds.map(id => id.replace(/^beneos_actor_/, ""));
-    ui.notifications.info(`Starting batch download/install of ${tokensToInstall.length} Beneos creatures...`);
+    ui.notifications.info(`Starting batch install of ${tokensToInstall.length} Beneos creatures to World Actors...`);
 
     let installedCount = 0;
     for (const key of tokensToInstall) {
@@ -849,7 +897,7 @@ export class JenneAssetManagerApp extends HandlebarsApplicationMixin(Application
       }
     }
 
-    ui.notifications.info(`Successfully installed ${installedCount} of ${tokensToInstall.length} creatures.`);
+    ui.notifications.info(`Successfully installed ${installedCount} of ${tokensToInstall.length} creatures to World Actors.`);
     this._selectedAssets.clear();
     this.render();
   }

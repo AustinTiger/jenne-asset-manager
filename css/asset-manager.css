@@ -1433,6 +1433,18 @@
   font-family: 'Inter', sans-serif;
 }
 
+.btn-download {
+  background: rgba(37, 99, 235, 0.2);
+  border-color: rgba(37, 99, 235, 0.4);
+  color: #93c5fd;
+}
+
+.btn-download:hover {
+  background: rgba(37, 99, 235, 0.35);
+  color: #ffffff;
+  box-shadow: 0 0 8px rgba(37, 99, 235, 0.3);
+}
+
 .btn-install {
   background: linear-gradient(180deg, #d4a857 0%, #bda26f 100%);
   color: #0d0a08;

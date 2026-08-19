@@ -67,7 +67,8 @@
         <select class="jenne-compendium-select" id="jenne-batch-action-select" style="width: 100%; font-size: 12px; height: 34px;">
           <option value="import-compendium" {{#if (eq selectedBatchAction "import-compendium")}}selected{{/if}}>📦 Import to Compendium</option>
           {{#if hasBeneos}}
-            <option value="beneos-install" {{#if (eq selectedBatchAction "beneos-install")}}selected{{/if}}>📥 Download / Install (Beneos)</option>
+            <option value="beneos-download" {{#if (eq selectedBatchAction "beneos-download")}}selected{{/if}}>📥 Download to Compendiums (Beneos)</option>
+            <option value="beneos-install" {{#if (eq selectedBatchAction "beneos-install")}}selected{{/if}}>⚔️ Install to World Actors (Beneos)</option>
             <option value="beneos-update" {{#if (eq selectedBatchAction "beneos-update")}}selected{{/if}}>🔄 Update (Beneos)</option>
             <option value="beneos-uninstall" {{#if (eq selectedBatchAction "beneos-uninstall")}}selected{{/if}}>🗑️ Uninstall (Beneos)</option>
           {{/if}}
@@ -93,11 +94,18 @@
               <input type="text" class="jenne-folder-input" id="folder-target" placeholder="e.g. Monsters/Goblins" value="{{subfolder}}" style="width: 100%; font-size: 11.5px; height: 30px;">
             </div>
           </div>
+        {{else if (eq selectedBatchAction "beneos-download")}}
+          <div class="jenne-action-specific-options">
+            <div class="action-info-box">
+              <i class="fas fa-cloud-arrow-down"></i>
+              <span>Downloads and stores selected creatures directly in Compendiums without cluttering World Actors.</span>
+            </div>
+          </div>
         {{else if (eq selectedBatchAction "beneos-install")}}
           <div class="jenne-action-specific-options">
             <div class="action-info-box">
-              <i class="fas fa-info-circle"></i>
-              <span>Downloads and installs selected creature tokens and actor documents.</span>
+              <i class="fas fa-dragon"></i>
+              <span>Installs and creates active Actor documents in your World Actors directory.</span>
             </div>
           </div>
         {{else if (eq selectedBatchAction "beneos-update")}}
@@ -283,8 +291,11 @@
                           </button>
                         {{/if}}
                       {{else if isOwned}}
-                        <button class="beneos-btn-action btn-install" data-action="installBeneosActor" data-key="{{key}}" title="Download and install creature">
-                          <i class="fa-solid fa-cloud-arrow-down"></i> Install
+                        <button class="beneos-btn-action btn-download" data-action="downloadBeneosActor" data-key="{{key}}" title="Download to Compendium (Keep World clean)">
+                          <i class="fa-solid fa-cloud-arrow-down"></i> Download
+                        </button>
+                        <button class="beneos-btn-action btn-install" data-action="installBeneosActor" data-key="{{key}}" title="Install to World Actors">
+                          <i class="fa-solid fa-dragon"></i> Install
                         </button>
                       {{else}}
                         <span class="beneos-status-pill pill-locked" title="Locked (Patreon subscription required)">
