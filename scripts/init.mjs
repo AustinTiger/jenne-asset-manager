@@ -1,6 +1,5 @@
 import { JenneAssetManagerApp } from "./app/asset-manager-app.mjs";
 import { BeneosBatchImporterApp } from "./app/beneos-batch-importer.mjs";
-import { JenneDDBPatchApp } from "./app/ddb-patch-app.mjs";
 import { setupCanvasDrop } from "./canvas-drop.mjs";
 import { SourceRouter } from "./adapters/source-router.mjs";
 import { BeneosAdapter } from "./adapters/beneos-adapter.mjs";
@@ -13,7 +12,6 @@ Hooks.once("init", () => {
   // Expose to global scope for debugging and macros
   globalThis.JenneAssetManagerApp = JenneAssetManagerApp;
   globalThis.BeneosBatchImporterApp = BeneosBatchImporterApp;
-  globalThis.JenneDDBPatchApp = JenneDDBPatchApp;
   globalThis.JenneSourceRouter = SourceRouter;
   globalThis.JenneAdapters = { BeneosAdapter, DdbAdapter, LocalDriveAdapter };
 
@@ -103,19 +101,6 @@ Hooks.on("getSceneControlButtons", (controls) => {
     }
   };
   addTool(tool);
-
-  // Define our DDB Importer Patch tool button
-  const ddbTool = {
-    name: "ddb-patcher",
-    title: "Patch D&D Beyond Importer",
-    icon: "fas fa-dragon",
-    button: true,
-    visible: true,
-    onChange: () => {
-      new JenneDDBPatchApp().render({ force: true });
-    }
-  };
-  addTool(ddbTool);
 
   // Define our Auto Color tool button
   const autoColorTool = {
